@@ -25,7 +25,7 @@ class Arrow(pygame.sprite.Sprite):
 
         self.gravity = gravity
     
-    def update(self):
+    def update(self, scroll):
 
         self.current_gravity += self.gravity
 
@@ -37,8 +37,8 @@ class Arrow(pygame.sprite.Sprite):
 
         self.rect.center = (self.x, self.y)
         self.display.blit(self.image,
-                          (self.rect.x - self.image.get_width() // 2,
-                           self.rect.y - self.image.get_height() // 2))
+                          (self.rect.x - self.image.get_width() // 2 - scroll[0],
+                           self.rect.y - self.image.get_height() // 2 - scroll[1]))
         
 
 
@@ -169,7 +169,6 @@ class Lightning1(pygame.sprite.Sprite):
         #         self.points[n] = (x, y)
         pygame.draw.lines(self.display, (80, 120, 255), False, self.points, 3)
         pygame.draw.lines(self.display, (190, 210, 255), False, self.points, 2)
-        
 
     def del_point(self):
         del self.points[len(self.points) // 2]
@@ -178,17 +177,77 @@ class Lightning1(pygame.sprite.Sprite):
         self.points.insert(-3, self.points[-2])    
 
 
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, display: pygame.Surface, start: tuple, end: tuple, speed: int):
+        self.x, self.y = start
+
+        targetx, targety = end
+        angle = math.atan2(targety - self.y, targetx - self.x)
+        self.degrees = round(to_deg(angle))
+
+        self.origin_image = load_image("data/arrow_im", color_key=(255, 255, 255))
+        self.origin_image = pygame.transform.flip(self.origin_image, True, False)
+        self.image = pygame.transform.rotate(self.origin_image, -self.degrees)
+
+        self.rect = pygame.Rect(0, 0, 4, 4)
+
+        self.hitbox = pygame.Rect(0, 0, 1, 1)  # no hitbox in the start
+
+        self.dx = math.cos(angle) * speed
+        self.dy = math.sin(angle) * speed
+
+        self.display = display
+    
+    def update(self, scroll):
+        self.x = self.x + self.dx
+        self.y = self.y + self.dy
+
+        self.rect.center = (self.x, self.y)
+        self.display.blit(self.image,
+                          (self.rect.x - self.image.get_width() // 2 - scroll[0],
+                           self.rect.y - self.image.get_height() // 2 - scroll[1]))
+        
+        x0, y0 = self.rect.center
+        x1 = math.cos(to_rad(self.degrees)) * 25 + x0 - 6
+        y1 = math.sin(to_rad(self.degrees)) * 25 + y0 - 6
+
+        self.hitbox = pygame.Rect(x1, y1, 10, 10)
+    
+    def get_hitbox(self):
+        return self.hitbox
+
+
+class Bullets:
+    def __init__(self, display: pygame.Surface, speed: int):
+        self.display = display
+        self.speed = speed
+        self.bullets = list()
+    
+    def update(self, scroll):
+        i = 0
+        while i < len(self.bullets):
+            self.bullets[i].update(scroll)
+            x, y = self.bullets[i].rect.center
+            if not ((-2000 < x < 2000) and (-2000 < y < 2000)):
+                del self.bullets[i]
+            else:
+                i += 1
+    
+    def add_bullet(self, start: tuple, end: tuple):
+        self.bullets.append(Bullet(self.display, start, end, self.speed))
+
+
 class Arrows:
-    def __init__(self, display: pygame.Surface, speed: int , gravity: int):
+    def __init__(self, display: pygame.Surface, speed: int, gravity: int):
         self.display = display
         self.speed = speed
         self.gravity = gravity
         self.arrows = list()
     
-    def update(self):
+    def update(self, scroll):
         i = 0
         while i < len(self.arrows):
-            self.arrows[i].update()
+            self.arrows[i].update(scroll)
             x, y = self.arrows[i].rect.center
             if not ((-2000 < x < 2000) and (-2000 < y < 2000)):
                 del self.arrows[i]
@@ -197,3 +256,58 @@ class Arrows:
     
     def add_arrow(self, start: tuple, end: tuple):
         self.arrows.append(Arrow(self.display, start, end, self.speed, self.gravity))
+
+
+class Bow(pygame.sprite.Sprite):
+    def __init__(self, display: pygame.Surface):
+        self.display = display
+        self.image = load_image("data/bow")
+        self.icon = pygame.transform.scale(self.image, (40, 40))
+
+        self.arrows = Arrows(display, 10, 0.07)
+        self.id = 0
+
+        self.weapon_type = Arrow
+    
+    def update(self, scroll, mx, my, player):
+        mx += scroll[0]
+        my += scroll[1]
+        angle = math.atan2(my - player.rect.centery, mx - player.rect.centerx)
+        degrees = round(angle * 180 / math.pi)
+        current_gun_image = self.image
+        if abs(degrees) > 90:
+            current_gun_image = pygame.transform.flip(current_gun_image, False, True)
+        current_gun_image = pygame.transform.rotate(current_gun_image, -degrees)
+        gun_rect = current_gun_image.get_rect()
+
+        self.display.blit(current_gun_image, (
+            player.rect.centerx - scroll[0] - gun_rect.centerx,
+            player.rect.centery - scroll[1] - gun_rect.centery
+        ))
+
+
+class Gun(pygame.sprite.Sprite):
+    def __init__(self, display: pygame.Surface):
+        self.display = display
+        self.image = load_image("data/bow1")
+        self.image = pygame.transform.rotate(self.image, 90)
+        self.icon = pygame.transform.scale(self.image, (40, 20))
+
+        self.weapon_type = Bullet
+        self.id = 1
+    
+    def update(self, scroll, mx, my, player):
+        mx += scroll[0]
+        my += scroll[1]
+        angle = math.atan2(my - player.rect.centery, mx - player.rect.centerx)
+        degrees = round(angle * 180 / math.pi)
+        current_gun_image = self.image
+        if abs(degrees) > 90:
+            current_gun_image = pygame.transform.flip(current_gun_image, False, True)
+        current_gun_image = pygame.transform.rotate(current_gun_image, -degrees)
+        gun_rect = current_gun_image.get_rect()
+
+        self.display.blit(current_gun_image, (
+            player.rect.centerx - scroll[0] - gun_rect.centerx,
+            player.rect.centery - scroll[1] - gun_rect.centery
+        ))

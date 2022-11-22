@@ -20,10 +20,11 @@ class Map:
 
         left_ramp = pygame.Surface((self.tile_width, self.tile_width))
         pygame.draw.polygon(left_ramp, (50, 50, 50), ((0, 0), (30, 30), (0, 30)))
+        pygame.draw.polygon(left_ramp, (100, 100, 100), ((5, 13), (17, 25), (5, 25)))
         left_ramp.set_colorkey((0, 0, 0))
 
-        right_ramp = pygame.Surface((self.tile_width, self.tile_width))
-        pygame.draw.polygon(right_ramp, (50, 50, 50), ((30, 0), (30, 30), (0, 30)))
+        right_ramp = pygame.transform.flip(left_ramp, True, False)
+
         right_ramp.set_colorkey((0, 0, 0))
 
         self.tile_index = {
@@ -54,5 +55,6 @@ class Map:
                 if self.data[i][k] != " ":
                     self.display.blit(self.tile_index[self.data[i][k]],
                     (k * self.tile_width - scroll[0], i * self.tile_width - scroll[1]))
+    
     def get_rects(self):
         return self.tile_rects
