@@ -9,7 +9,7 @@ class Arrow(pygame.sprite.Sprite):
         angle = math.atan2(targety - self.y, targetx - self.x)
         degrees = round(to_deg(angle))
 
-        self.origin_image = load_image("data/arrow_im", color_key=(255, 255, 255))
+        self.origin_image = load_image("data/images/arrow_im", color_key=(255, 255, 255))
         self.image = pygame.transform.rotate(self.origin_image, -degrees)
 
         self.rect = pygame.Rect(0, 0, 4, 4)
@@ -24,6 +24,8 @@ class Arrow(pygame.sprite.Sprite):
         self.current_gravity = 0
 
         self.gravity = gravity
+
+        self.damage = 15
     
     def update(self, scroll):
 
@@ -185,7 +187,7 @@ class Bullet(pygame.sprite.Sprite):
         angle = math.atan2(targety - self.y, targetx - self.x)
         self.degrees = round(to_deg(angle))
 
-        self.origin_image = load_image("data/arrow_im", color_key=(255, 255, 255))
+        self.origin_image = load_image("data/images/arrow_im", color_key=(255, 255, 255))
         self.origin_image = pygame.transform.flip(self.origin_image, True, False)
         self.image = pygame.transform.rotate(self.origin_image, -self.degrees)
 
@@ -197,6 +199,8 @@ class Bullet(pygame.sprite.Sprite):
         self.dy = math.sin(angle) * speed
 
         self.display = display
+
+        self.damage = 10
     
     def update(self, scroll):
         self.x = self.x + self.dx
@@ -223,12 +227,13 @@ class Bullets:
         self.speed = speed
         self.bullets = list()
     
-    def update(self, scroll):
+    def update(self, scroll, rects):
         i = 0
         while i < len(self.bullets):
             self.bullets[i].update(scroll)
             x, y = self.bullets[i].rect.center
-            if not ((-2000 < x < 2000) and (-2000 < y < 2000)):
+
+            if not ((-2000 < x < 2000) and (-2000 < y < 2000)) or self.bullets[i].rect.collidelist(rects) != -1:
                 del self.bullets[i]
             else:
                 i += 1
@@ -244,12 +249,13 @@ class Arrows:
         self.gravity = gravity
         self.arrows = list()
     
-    def update(self, scroll):
+    def update(self, scroll, rects):
         i = 0
         while i < len(self.arrows):
             self.arrows[i].update(scroll)
             x, y = self.arrows[i].rect.center
-            if not ((-2000 < x < 2000) and (-2000 < y < 2000)):
+            
+            if not ((-2000 < x < 2000) and (-2000 < y < 2000)) or self.arrows[i].rect.collidelist(rects) != -1:
                 del self.arrows[i]
             else:
                 i += 1
@@ -261,7 +267,7 @@ class Arrows:
 class Bow(pygame.sprite.Sprite):
     def __init__(self, display: pygame.Surface):
         self.display = display
-        self.image = load_image("data/bow")
+        self.image = load_image("data/images/bow")
         self.icon = pygame.transform.scale(self.image, (40, 40))
 
         self.arrows = Arrows(display, 10, 0.07)
@@ -289,7 +295,7 @@ class Bow(pygame.sprite.Sprite):
 class Gun(pygame.sprite.Sprite):
     def __init__(self, display: pygame.Surface):
         self.display = display
-        self.image = load_image("data/bow1")
+        self.image = load_image("data/images/bow")
         self.image = pygame.transform.rotate(self.image, 90)
         self.icon = pygame.transform.scale(self.image, (40, 20))
 

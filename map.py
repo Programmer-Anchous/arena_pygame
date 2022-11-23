@@ -2,16 +2,18 @@ from tools import *
 
 
 class Tile:
-    def __init__(self, rect, tile_type, ramp=False):
+    def __init__(self, rect, tile_type, ramp=False, platform=False):
         self.rect = rect
         self.tile_type = tile_type
         self.ramp = ramp
+        self.platform = platform
 
 
 class Map:
     def __init__(self, display, filename):
         self.display = display
         self.tile_rects = []
+        self.platforms = []
         self.tile_width = 30
 
         block_center = pygame.Surface((self.tile_width, self.tile_width))
@@ -23,6 +25,11 @@ class Map:
         pygame.draw.polygon(left_ramp, (100, 100, 100), ((5, 13), (17, 25), (5, 25)))
         left_ramp.set_colorkey((0, 0, 0))
 
+        platform = pygame.Surface((self.tile_width, self.tile_width))
+        pygame.draw.rect(platform, (139, 69, 19), (0, 0, 30, 10))
+        pygame.draw.rect(platform, (109, 39, 0), (0, 0, 30, 10), 2)
+        platform.set_colorkey((0, 0, 0))
+
         right_ramp = pygame.transform.flip(left_ramp, True, False)
 
         right_ramp.set_colorkey((0, 0, 0))
@@ -30,7 +37,8 @@ class Map:
         self.tile_index = {
             "s": block_center,
             "l": left_ramp,
-            "r": right_ramp
+            "r": right_ramp,
+            "p": platform
         }
 
         with open(filename, "r", encoding="utf-8") as file:
@@ -38,10 +46,16 @@ class Map:
         
         for i in range(len(self.data)):
             for k in range(len(self.data[i])):
-                if self.data[i][k] in "rl":
+                if self.data[i][k] == "p":
+                    self.platforms.append(
+                        Tile(pygame.Rect(k * self.tile_width, i * self.tile_width, self.tile_width, self.tile_width),
+                             self.data[i][k], False, True))
+                
+                elif self.data[i][k] in "rl":
                     self.tile_rects.append(
                         Tile(pygame.Rect(k * self.tile_width, i * self.tile_width, self.tile_width, self.tile_width),
                              self.data[i][k], True))
+                
                 elif self.data[i][k] != " ":
                     self.tile_rects.append(
                         Tile(pygame.Rect(k * self.tile_width, i * self.tile_width, self.tile_width, self.tile_width),
@@ -58,3 +72,6 @@ class Map:
     
     def get_rects(self):
         return self.tile_rects
+    
+    def get_platforms(self):
+        return self.platforms

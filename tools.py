@@ -51,7 +51,7 @@ def move(rect: pygame.Rect, movement: tuple, tiles) -> tuple:
     collision_types = {'top': False, 'bottom': False, 'right': False, 'left': False}
     rect.y += movement[1]
     hit_list = collision_test(rect, tiles)
-    hit_list = [tile for tile in hit_list if not tile.ramp]
+    hit_list = [tile for tile in hit_list if (not tile.ramp) and (not tile.platform)]
     for tile in hit_list:
         if movement[1] > 0:
             rect.bottom = tile.rect.top
@@ -62,7 +62,10 @@ def move(rect: pygame.Rect, movement: tuple, tiles) -> tuple:
     rect.x += movement[0]
     hit_list = collision_test(rect, tiles)
     ramps = [tile for tile in hit_list if tile.ramp]
-    hit_list = [tile for tile in hit_list if not tile.ramp]
+
+    platforms = [tile for tile in hit_list if tile.platform]
+
+    hit_list = [tile for tile in hit_list if (not tile.ramp) and (not tile.platform)]
     for tile in hit_list:
         if movement[0] > 0:
             rect.right = tile.rect.left
@@ -87,6 +90,16 @@ def move(rect: pygame.Rect, movement: tuple, tiles) -> tuple:
             if rect.bottom > target_y:
                 rect.bottom = target_y
                 collision_types["bottom"] = True
+    
+    # platforms
+    if movement[1] > 0:
+        bottom_rect = pygame.Rect(*rect.bottomleft, rect.width, 1)
+        for platform in platforms:
+            hitbox = platform.rect
+            if bottom_rect.colliderect(hitbox) and abs(rect.bottom - hitbox.y) < 12:  # 12 - maximum "y" movement 
+                bottom_rect.bottom = platform.rect.top
+                rect.bottom = platform.rect.top
+                collision_types['bottom'] = True
     return rect, collision_types
 
 # collide_functions_end_____________________________________________________#
