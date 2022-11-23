@@ -20,19 +20,19 @@ font_5 = Font("data/font/letters.png", 5)
 collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
 
 # creating buttons
-exit_image = font_5.render("exit", (240, 240, 240))
+exit_image = font_5.render("exit", (220, 220, 220))
 exit_pressed_image = font_5.render("exit", (255, 255, 0))
 exit_button = Button(exit_image, exit_pressed_image,
                      (WINDOW_SIZE[0] // 2 - exit_image.get_width() // 2, WINDOW_SIZE[1] // 2 + 160),
                      display, collide_button_sound)
 
-back_image = font_5.render("back", (240, 240, 240))
+back_image = font_5.render("back", (220, 220, 220))
 back_pressed_image = font_5.render("back", (255, 255, 0))
 back_button = Button(back_image, back_pressed_image,
                      (WINDOW_SIZE[0] // 2 - back_image.get_width() // 2, WINDOW_SIZE[1] // 2 + 160),
                      display, collide_button_sound)
 
-play_image = font_5.render("play", (240, 240, 240))
+play_image = font_5.render("play", (220, 220, 220))
 play_pressed_image = font_5.render("play", (255, 255, 0))
 play_button = Button(play_image, play_pressed_image,
                      (WINDOW_SIZE[0] // 2 - back_image.get_width() // 2, WINDOW_SIZE[1] // 2 + 60),

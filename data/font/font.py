@@ -14,7 +14,7 @@ class Font:
         self.spacing = size
         self.ocharacters_order = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
                                   'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8',
-                                  '9', '0', '?', '!', '<', '>', '[', ']', '%']
+                                  '9', '0', '?', '!', '<', '>', '[', ']', '%', '-', '/']
         font_img = pygame.image.load(path).convert()
         font_img.set_colorkey((0, 0, 0))
         current_char_width = 0
@@ -39,9 +39,9 @@ class Font:
         for char in text:
             if char in "abcdefgjkmnopqsuvxyz234567890":
                 length += 4
-            elif char in "ilt1?%":
+            elif char in "ilt1?%/":
                 length += 3
-            elif char in "<>[]":
+            elif char in "<>[]-":
                 length += 2
             elif char in "!":
                 length += 1

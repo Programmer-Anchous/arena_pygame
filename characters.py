@@ -14,7 +14,7 @@ def check_if_weapon(obj):
 
 
 class Inventory:
-    def __init__(self, display):
+    def __init__(self, display, font):
         self.display = display
         self.items = [None] * 5 * 3
         self.is_opened = False
@@ -42,9 +42,9 @@ class Inventory:
         self.draged = False
         self.draged_item = None
 
-        font = Font("data/font/letters.png", 2)
+        self.font = font
 
-        self.text_inventory = font.render(f"inventory", (240, 240, 240))
+        self.text_inventory = self.font.render(f"inventory", (240, 240, 240))
     
     def update(self):
         right_range = 5 * 3 if self.is_opened else 5
@@ -144,7 +144,9 @@ class Player(pygame.sprite.Sprite):
 
         self.item = None
 
-        self.inventory = Inventory(display)
+        self.font = Font("data/font/letters.png", 2)
+
+        self.inventory = Inventory(display, self.font)
         self.inventory.add_item(Gun(display))
         self.inventory.add_item(Bow(display))
 
@@ -275,15 +277,45 @@ class Player(pygame.sprite.Sprite):
         self.health = 100
     
     def draw_healthbar(self):
-        pygame.draw.rect(
+        text = f"life  {self.health} / {100}"
+        surf = self.font.render(text, (220, 220, 220))
+        self.display.blit(surf, (self.WINDOW_SIZE[0] - 230, 10))
+
+        pygame.draw.rect(  # lighter line backgrouns
             self.display,
-            (220, 40, 20),
+            (70, 70, 70),
+            (self.WINDOW_SIZE[0] - 280, 30, 250, 30),
+            0,
+            3)
+        pygame.draw.rect(  # dark backgrouns
+            self.display,
+            (20, 20, 20),
+            (self.WINDOW_SIZE[0] - 270, 38, 230, 14),
+            0,
+            3)
+
+        pygame.draw.rect(  # red line
+            self.display,
+            (170, 20, 20),
             (self.WINDOW_SIZE[0] - 280, 30, 250 * (self.health / 100), 30),
             0,
             3)
-        pygame.draw.rect(
+        pygame.draw.rect(  # dark red line
             self.display,
-            (20, 20, 20),
+            (140, 10, 10),
+            (self.WINDOW_SIZE[0] - 280, 52, 250 * (self.health / 100), 8),
+            0,
+            3)
+        pygame.draw.rect(  # light red line
+            self.display,
+            (200, 30, 30),
+            (self.WINDOW_SIZE[0] - 280, 30, 250 * (self.health / 100), 8),
+            0,
+            3)
+
+        pygame.draw.rect(  # border
+            self.display,
+            (30, 30, 30),
             (self.WINDOW_SIZE[0] - 280, 30, 250, 30),
             2,
             3)

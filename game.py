@@ -13,7 +13,7 @@ pygame.init()
 
 WINDOW_SIZE = pygame.display.Info()
 WINDOW_SIZE = (WINDOW_SIZE.current_w, WINDOW_SIZE.current_h)
-FPS = 100
+FPS = 1000
 
 screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
 display = pygame.Surface(WINDOW_SIZE)
@@ -36,7 +36,7 @@ enemies = Enemies(display, tile_map.get_rects())
 font2 = Font("data/font/letters.png", 2)
 font3 = Font("data/font/letters.png", 3)
 
-to_main_menu_image = font3.render("to main menu", (240, 240, 240))
+to_main_menu_image = font3.render("to main menu", (220, 220, 220))
 to_main_menu_pressed_image = font3.render("to main menu", (255, 255, 0))
 to_main_menu_button = Button(
     to_main_menu_image,
@@ -49,13 +49,13 @@ to_main_menu_button = Button(
 
 def draw_fps():
     if player.inventory.is_opened:
-        text = font2.render(f"fps {int(clock.get_fps())}", (240, 240, 240))
+        text = font2.render(f"fps {int(clock.get_fps())}", (220, 220, 220))
         display.blit(text, (WINDOW_SIZE[0] - 70, 5))
 
 
 class Console:
     def __init__(self, display, font, enemies, player):
-        self.letters = "abcdefghijklmnopqrstuvwxyz1234567890?!<>[]%"
+        self.letters = "abcdefghijklmnopqrstuvwxyz1234567890?!<>[]%-/"
         self.display = display
         self.font = font
 
@@ -63,8 +63,8 @@ class Console:
         self.player = player
 
         self.commands = {
-            "killall": self.enemies.kill_all,
-            "fullhp": self.player.full_hp
+            "/killall": self.enemies.kill_all,
+            "/fullhp": self.player.full_hp
         }
 
         self.user_text = ""
@@ -75,44 +75,83 @@ class Console:
         self.surf.set_colorkey((0, 0, 0))
         self.surf.set_alpha(240)
 
+        description = [
+            "</killall> - kills all enemies",
+            "</fullhp> - fully restores your health",
+        ]
+        self.info = pygame.Surface((400, len(description) * 23 + 5))
+        for i, line in enumerate(description, start=0):
+            self.info.blit(font2.render(line, (220, 220, 220)), (10, i * 30))
+        self.info.set_colorkey((0, 0, 0))
+
+
         self.is_opened = False
 
         self.back_space_pressed = False
         self.back_space_counter = 0
         self.back_space_delay = 8
         self.back_space_auto = 40
+
+        self.history = ["", "/killall", "/fullhp"]
+        self.index = 0
     
     def update(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_c and pygame.key.get_mods() & pygame.KMOD_CTRL:  # CTRL+C
                     self.change()
+
                 elif event.key == pygame.K_BACKSPACE:
                     self.back_space_pressed = True
                     self.back_space_counter = 0
-                    if self.user_text:
-                        self.user_text = self.user_text[:-1]
+                    # if command from history had been modified put it to current command
+                    if self.history[self.index]:
+                        self.history[self.index] = self.history[self.index][:-1]
+
+                elif event.key == pygame.K_DOWN:
+                    self.index -= 1
+                elif event.key == pygame.K_UP:
+                    self.index += 1
+                
                 elif self.is_opened:
                     if event.key == pygame.K_RETURN:
-                        if self.user_text in self.commands:
-                            self.commands[self.user_text]()
+                        if self.history[self.index] in self.commands:
+                            self.commands[self.history[self.index]]()
+                            self.history[0] = self.history[self.index]
+                            if len(self.history) > 1:
+                                if self.history[0] == self.history[1]:  # don't log similar commands
+                                    del self.history[0]
+                            self.history.insert(0, "")  # log commands
+                            if len(self.history) > 20:
+                                del self.history[19:]
                         self.user_text = ""
+                        self.index = 0
                     else:
                         letter = event.unicode
                         if letter in self.letters:
                             if len(self.user_text) < 39:
-                                self.user_text += letter
+                                self.history[0] = self.history[self.index]
+                                self.index = 0
+                                self.history[self.index] += letter
+
+                if self.index >= len(self.history):
+                    self.index = len(self.history) - 1
+                elif self.index < 0:
+                    self.index = 0
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_BACKSPACE:
                     self.back_space_pressed = False
+            
+            self.user_text = self.history[self.index]
 
         if self.is_opened:
             if self.back_space_pressed:
                 self.back_space_counter += 1
                 if self.back_space_counter >= self.back_space_auto:
-                    if self.user_text and self.back_space_counter > self.back_space_delay:
+                    if self.history[self.index] and self.back_space_counter > self.back_space_delay:
                         self.back_space_counter -= self.back_space_delay
-                        self.user_text = self.user_text[:-1]
+                        self.history[self.index] = self.history[self.index][:-1]
             
             self.display.blit(self.surf, (10, WINDOW_SIZE[1] - 40))
             if self.user_text:
@@ -122,6 +161,9 @@ class Console:
                     color = (230, 230, 230)
                 rendered_text = self.font.render(self.user_text, color)
                 self.display.blit(rendered_text, (20, WINDOW_SIZE[1] - 32))
+            
+            self.user_text = self.history[self.index]
+            self.display.blit(self.info, (20, WINDOW_SIZE[1] - self.info.get_height() - 60))
     
     def change(self):
         self.is_opened = not self.is_opened
@@ -161,7 +203,7 @@ def main_game():
         scroll = parallax_scrolling()
 
         display.fill((0, 0, 0))
-        # display.blit(background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
+        display.blit(background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
 
         mx, my = pygame.mouse.get_pos()
 
