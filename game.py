@@ -30,7 +30,7 @@ collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
 tile_map = Map(display, "data/map.txt")
 player = Player(display, (200, 50), tile_map.get_rects(), tile_map.get_platforms(), WINDOW_SIZE)
 
-enemies = Enemies(display, tile_map.get_rects())
+enemies = Enemies(display, tile_map.get_rects(), player)
 
 
 font2 = Font("data/font/letters.png", 2)
@@ -89,7 +89,7 @@ class Console:
 
         self.back_space_pressed = False
         self.back_space_counter = 0
-        self.back_space_delay = 8
+        self.back_space_delay = 5
         self.back_space_auto = 40
 
         self.history = ["", "/killall", "/fullhp"]
@@ -178,11 +178,15 @@ class Generator:
 
         self.counter = 0
     
-    def update(self, scroll):
+    def update(self):
         self.counter += 1
-        if self.counter % 400 == 0:
+        if self.counter % 600 == 0:
             self.counter = 0
-            self.enemies.add_enemy((random.randint(100, 500), random.randint(100, 400)), random.randint(500, 1900))
+            if len(self.enemies.enemies) < 10:
+                self.enemies.add_enemy(
+                    (random.randint(100, 500), random.randint(100, 400)),
+                    random.randint(500, 1900)
+                )
 
 
 generator = Generator(tile_map, player, enemies)
@@ -257,7 +261,7 @@ def main_game():
 
         enemies.update(scroll, player.bullets, player.arrows)
 
-        generator.update(scroll)
+        generator.update()
         console.update(events)
 
         draw_fps()

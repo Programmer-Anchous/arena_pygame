@@ -156,7 +156,8 @@ class Player(pygame.sprite.Sprite):
         self.moving_down_counter = 0
         self.real_moving_down = False  # for platforms 
 
-        self.health = 50
+        self.float_health = 100
+        self.health = self.float_health
     
     def fire(self, scroll, mx, my):
         mx += scroll[0]
@@ -251,6 +252,10 @@ class Player(pygame.sprite.Sprite):
             self.air_timer += 1
 
     def update(self, scroll, mx, my, clicked):
+        self.float_health += 0.005
+        if self.float_health > 100:
+            self.float_health = 100
+        self.health = int(self.float_health)
         self.move()
         self.display.blit(self.image, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         self.update_item(scroll, mx, my, self)
@@ -274,7 +279,7 @@ class Player(pygame.sprite.Sprite):
         self.moving_left = False
     
     def full_hp(self):
-        self.health = 100
+        self.float_health = 100
     
     def draw_healthbar(self):
         text = f"life  {self.health} / {100}"
@@ -322,7 +327,7 @@ class Player(pygame.sprite.Sprite):
 
 
 class Enemy_Sniper(Entitiy):
-    def __init__(self, display, coords, rects, target):
+    def __init__(self, display, coords, rects, target, player):
         Entitiy.__init__(self, display)
         # these points are range of the way which enemy will walk
         self.moving_right = True
@@ -336,12 +341,14 @@ class Enemy_Sniper(Entitiy):
         pygame.draw.rect(self.image, (150, 10, 5), (0, 0, 30, 50), 5)
         self.rect = self.image.get_rect(topleft=coords)
 
-        self.current_item = None
-        self.bullets = []
+        self.current_item = Gun
+        self.bullets = Bullets(self.display, 7)
         self.fire_counter = 0
-        self.fire_limit = 100
+        self.fire_limit = 150
 
         self.health = 100
+
+        self.player = player
 
     def draw_health(self, scroll):
         green = int(self.health * 2.55)
@@ -383,19 +390,17 @@ class Enemy_Sniper(Entitiy):
             self.air_timer += 1
 
     def update_bullets(self, scroll):
-        i = 0
-        while i < len(self.bullets):
-            self.bullets[i].update(scroll)
-            if self.bullets[i].collided(self.rects) >= 0:
-                del self.bullets[i]
-            else:
-                i += 1
+        self.bullets.update(scroll, self.rects)
 
-    def fire(self, display, scroll, rect):
-        self.bullets.append(self.current_item.bullet(self.rect.x + 28, self.rect.y + 32,
-                                                     rect.centerx, rect.centery, 6, display, scroll))
+    def fire(self, rect):
+        self.bullets.add_bullet((self.rect.x + 28, self.rect.y + 32), rect.center)
 
     def update(self, scroll):
+        self.fire_counter += 1
+        if self.fire_counter > self.fire_limit:
+            self.fire_counter = 0
+            self.fire(self.player.rect)
+
         self.move()
         self.update_bullets(scroll)
 
@@ -405,10 +410,11 @@ class Enemy_Sniper(Entitiy):
 
 
 class Enemies:
-    def __init__(self, display, rects):
+    def __init__(self, display, rects, player):
         self.display = display
         self.rects = rects
         self.enemies = list()
+        self.player = player
     
     def kill_all(self):
         self.enemies.clear()
@@ -440,8 +446,17 @@ class Enemies:
                         break
                     k -= 1
                 k += 1
-            
+
             i += 1
+        
+        for enemy in self.enemies:
+            i = 0
+            while i < len(enemy.bullets.bullets):
+                if enemy.bullets.bullets[i].get_hitbox().colliderect(self.player):
+                    del enemy.bullets.bullets[i]
+                    self.player.float_health -= 5
+                else:
+                    i += 1
     
     def add_enemy(self, coords, target):
-        self.enemies.append(Enemy_Sniper(self.display, coords, self.rects, target))
+        self.enemies.append(Enemy_Sniper(self.display, coords, self.rects, target, self.player))
