@@ -96,7 +96,7 @@ def move(rect: pygame.Rect, movement: tuple, tiles) -> tuple:
         bottom_rect = pygame.Rect(*rect.bottomleft, rect.width, 1)
         for platform in platforms:
             hitbox = platform.rect
-            if bottom_rect.colliderect(hitbox) and abs(rect.bottom - hitbox.y) < 12:  # 12 - maximum "y" movement 
+            if bottom_rect.colliderect(hitbox) and abs(rect.bottom - hitbox.y) < 16:  # 16 - maximum "y" movement 
                 bottom_rect.bottom = platform.rect.top
                 rect.bottom = platform.rect.top
                 collision_types['bottom'] = True

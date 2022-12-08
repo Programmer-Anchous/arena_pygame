@@ -102,7 +102,7 @@ class Entitiy(pygame.sprite.Sprite):
         self.player_action = None
         self.player_image_id = None
         self.tile_rects = None
-        self.collisions = None
+        self.collisions = {"top": False, "bottom": False, "right": False, "left": False}
 
 
 # circular motion
@@ -131,7 +131,7 @@ class EnemyBeta(pygame.sprite.Sprite):
         pygame.draw.rect(self.display, (200, 200, 255), self.rect)
 
 
-class Player(pygame.sprite.Sprite):
+class Player(Entitiy):
     def __init__(self, display, coords, rects, platforms, WINDOW_SIZE):
         Entitiy.__init__(self, display)
         self.rects = rects
@@ -150,14 +150,17 @@ class Player(pygame.sprite.Sprite):
         self.inventory.add_item(Gun(display))
         self.inventory.add_item(Bow(display))
 
-        self.bullets = Bullets(display, 10)
-        self.arrows = Arrows(display, 10, 0.07)
+        self.bullets = Bullets(display, 12)
+        self.arrows = Arrows(display, 14, 0.15)
 
         self.moving_down_counter = 0
         self.real_moving_down = False  # for platforms 
 
         self.float_health = 100
         self.health = self.float_health
+
+        self.gravity = 1
+        self.speed = 5
     
     def fire(self, scroll, mx, my):
         mx += scroll[0]
@@ -220,11 +223,11 @@ class Player(pygame.sprite.Sprite):
     def move(self):
         self.movement = [0, 0]
         if self.moving_right:
-            self.movement[0] += 3
+            self.movement[0] += self.speed
         if self.moving_left:
-            self.movement[0] -= 3
+            self.movement[0] -= self.speed
         self.movement[1] += self.player_y_momentum
-        self.player_y_momentum += 0.4
+        self.player_y_momentum += self.gravity
         if self.player_y_momentum > 10:
             self.player_y_momentum = 10
         
@@ -248,8 +251,13 @@ class Player(pygame.sprite.Sprite):
         if self.collisions['bottom']:
             self.player_y_momentum = 0
             self.air_timer = 0
+            self.is_jumping = False
         else:
             self.air_timer += 1
+
+    def jump(self):
+        if self.air_timer < 6:
+            self.player_y_momentum = -20  # jumping
 
     def update(self, scroll, mx, my, clicked):
         self.float_health += 0.005
@@ -327,14 +335,18 @@ class Player(pygame.sprite.Sprite):
 
 
 class Enemy_Sniper(Entitiy):
-    def __init__(self, display, coords, rects, target, player):
+    def __init__(self, display, coords, rects, platforms, targetx, targety, player):
         Entitiy.__init__(self, display)
         # these points are range of the way which enemy will walk
         self.moving_right = True
-        self.point_A = coords[0]
-        self.point_B = target
+        self.point_A = targetx
+        self.point_B = targety
 
         self.rects = rects
+        self.platforms = platforms
+
+        self.moving_down_counter = 0
+        self.real_moving_down = False  # for platforms 
 
         self.image = pygame.Surface((30, 50))
         self.image.fill((200, 20, 10))
@@ -342,13 +354,22 @@ class Enemy_Sniper(Entitiy):
         self.rect = self.image.get_rect(topleft=coords)
 
         self.current_item = Gun
-        self.bullets = Bullets(self.display, 7)
+        self.bullets = Bullets(self.display, 11)
         self.fire_counter = 0
         self.fire_limit = 150
 
         self.health = 100
 
         self.player = player
+
+        self.gravity = 1
+        self.speed = 4
+        self.jump_force = 17
+        self.is_jumping = False
+        self.prev_is_jumping = False
+
+        self.previous_coord = None
+
 
     def draw_health(self, scroll):
         green = int(self.health * 2.55)
@@ -360,34 +381,73 @@ class Enemy_Sniper(Entitiy):
     def move(self):
         self.movement = [0, 0]
         if self.moving_right:
-            self.movement[0] += 2
+            self.movement[0] += self.speed
         if self.moving_left:
-            self.movement[0] -= 2
+            self.movement[0] -=self.speed
         self.movement[1] += self.player_y_momentum
-        self.player_y_momentum += 0.4
+        self.player_y_momentum += self.gravity
         if self.player_y_momentum > 10:
             self.player_y_momentum = 10
+        
+        if self.moving_down == True:
+            self.real_moving_down = True
+            self.moving_down_counter = 10
+        
+        self.moving_down_counter -= 1
+        if self.moving_down_counter <= 0:
+            self.real_moving_down = False
+            self.moving_down_counter = 0
+        
+        # falling from platforms if player located lower then enemy
+        if self.collisions["bottom"] and (self.player.rect.bottom - self.rect.bottom) > 30:
+            self.moving_down = True
+        else:
+            self.moving_down = False
 
-        previous_coord = self.rect.x
-        self.rect, self.collisions = move(self.rect, self.movement, self.rects)
+        # self.previous_coord = self.rect.x
+        if self.real_moving_down:
+            self.rect, self.collisions = move(self.rect, self.movement, self.rects)
+        else:
+            self.rect, self.collisions = move(self.rect, self.movement, self.rects + self.platforms)
 
-        # bot moving algorithm
-        if self.moving_right:
-            if self.rect.x >= self.point_B or previous_coord == self.rect.x:
-                self.moving_right = False
-                self.moving_left = True
-        elif self.moving_left:
-            if self.rect.x <= self.point_A or previous_coord == self.rect.x:
-                self.moving_left = False
-                self.moving_right = True
 
         if self.collisions["top"]:
             self.player_y_momentum = 0
         if self.collisions['bottom']:
+            self.jumps_count = 0
+            self.prev_is_jumping = self.is_jumping
+            self.is_jumping = False
             self.player_y_momentum = 0
             self.air_timer = 0
         else:
             self.air_timer += 1
+        
+
+        # bot moving algorithm
+        if not self.is_jumping:
+            if self.moving_right:
+                if self.rect.x >= self.point_B or self.previous_coord == self.rect.x:
+                    self.moving_right = False
+                    self.moving_left = True
+                    self.previous_coord = None
+            elif self.moving_left:
+                if self.rect.x <= self.point_A or self.previous_coord == self.rect.x:
+                    self.moving_left = False
+                    self.moving_right = True
+                    self.previous_coord = None
+        
+        if self.collisions["bottom"]:
+            self.previous_coord = None
+        
+        if self.collisions["right"] or self.collisions["left"]:
+            self.jump()
+
+    def jump(self):
+        if self.air_timer < 6 and not self.is_jumping:
+            self.previous_coord = self.rect.x
+            self.player_y_momentum = -self.jump_force  # jumping
+            self.prev_is_jumping = self.is_jumping
+            self.is_jumping = True
 
     def update_bullets(self, scroll):
         self.bullets.update(scroll, self.rects)
@@ -410,9 +470,10 @@ class Enemy_Sniper(Entitiy):
 
 
 class Enemies:
-    def __init__(self, display, rects, player):
+    def __init__(self, display, rects, platforms, player):
         self.display = display
         self.rects = rects
+        self.platforms = platforms
         self.enemies = list()
         self.player = player
     
@@ -458,5 +519,5 @@ class Enemies:
                 else:
                     i += 1
     
-    def add_enemy(self, coords, target):
-        self.enemies.append(Enemy_Sniper(self.display, coords, self.rects, target, self.player))
+    def add_enemy(self, coords, targetx, targety):
+        self.enemies.append(Enemy_Sniper(self.display, coords, self.rects, self.platforms, targetx, targety, self.player))

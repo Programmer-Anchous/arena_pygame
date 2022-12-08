@@ -12,10 +12,13 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 
 WINDOW_SIZE = pygame.display.Info()
+WINDOW_SIZE_real = WINDOW_SIZE
 WINDOW_SIZE = (WINDOW_SIZE.current_w, WINDOW_SIZE.current_h)
-FPS = 1000
+WINDOW_SIZE_real = WINDOW_SIZE
+# WINDOW_SIZE = (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
+FPS = 60
 
-screen = pygame.display.set_mode(WINDOW_SIZE, pygame.FULLSCREEN)
+screen = pygame.display.set_mode(WINDOW_SIZE_real, pygame.FULLSCREEN)
 display = pygame.Surface(WINDOW_SIZE)
 clock = pygame.time.Clock()
 
@@ -30,7 +33,7 @@ collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
 tile_map = Map(display, "data/map.txt")
 player = Player(display, (200, 50), tile_map.get_rects(), tile_map.get_platforms(), WINDOW_SIZE)
 
-enemies = Enemies(display, tile_map.get_rects(), player)
+enemies = Enemies(display, tile_map.get_rects(), tile_map.get_platforms(), player)
 
 
 font2 = Font("data/font/letters.png", 2)
@@ -89,8 +92,8 @@ class Console:
 
         self.back_space_pressed = False
         self.back_space_counter = 0
-        self.back_space_delay = 5
-        self.back_space_auto = 40
+        self.back_space_delay = 3
+        self.back_space_auto = 30
 
         self.history = ["", "/killall", "/fullhp"]
         self.index = 0
@@ -176,16 +179,16 @@ class Generator:
         self.player = player
         self.enemies = enemies
 
-        self.counter = 0
+        self.counter = 290
     
     def update(self):
         self.counter += 1
-        if self.counter % 600 == 0:
+        if self.counter % 300 == 0:
             self.counter = 0
-            if len(self.enemies.enemies) < 10:
+            if len(self.enemies.enemies) < 1:
                 self.enemies.add_enemy(
-                    (random.randint(100, 500), random.randint(100, 400)),
-                    random.randint(500, 1900)
+                    (random.randint(100, 200), random.randint(100, 110)),
+                    random.randint(-500, -400), random.randint(2100, 2200)
                 )
 
 
@@ -210,6 +213,8 @@ def main_game():
         display.blit(background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
 
         mx, my = pygame.mouse.get_pos()
+        # mx //= 2
+        # my //= 2
 
         clicked = False
         events = pygame.event.get()
@@ -243,8 +248,7 @@ def main_game():
                     if event.key == pygame.K_d:
                         player.moving_right = True
                     if event.key == pygame.K_SPACE:
-                        if player.air_timer < 6:
-                            player.player_y_momentum = -12  # jumping
+                        player.jump()
                     if event.key == pygame.K_s:
                         player.moving_down = True
                 

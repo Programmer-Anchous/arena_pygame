@@ -1,3 +1,5 @@
+import sys
+
 from tools import *
 from data.font.font import *
 from game import main_game
@@ -11,7 +13,7 @@ WINDOW_SIZE = monitor
 screen = pygame.display.set_mode(monitor, pygame.FULLSCREEN)
 display = pygame.Surface(monitor)
 clock = pygame.time.Clock()
-FPS = 100
+FPS = 60
 
 font_3 = Font("data/font/letters.png", 3)
 font_4 = Font("data/font/letters.png", 4)
@@ -49,7 +51,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
-            exit()
+            sys.exit()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
