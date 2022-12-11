@@ -210,7 +210,7 @@ def main_game():
         scroll = parallax_scrolling()
 
         display.fill((0, 0, 0))
-        # display.blit(background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
+        display.blit(background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
 
         mx, my = pygame.mouse.get_pos()
         # mx //= 2

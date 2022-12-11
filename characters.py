@@ -370,7 +370,6 @@ class Enemy_Sniper(Entitiy):
 
         self.previous_coord = None
 
-
     def draw_health(self, scroll):
         green = int(self.health * 2.55)
         pygame.draw.rect(self.display, (255 - green, green, 0),
@@ -476,6 +475,8 @@ class Enemies:
         self.platforms = platforms
         self.enemies = list()
         self.player = player
+
+        self.bullets = Bullets(display, 11)
     
     def kill_all(self):
         self.enemies.clear()
@@ -484,24 +485,33 @@ class Enemies:
         i = 0
         while i < len(self.enemies):
             self.enemies[i].update(scroll)
+
+            # check if player bullets collide with enemies
             k = 0
             while k < len(bullets.bullets):
                 if bullets.bullets[k].get_hitbox().colliderect(self.enemies[i].rect):
                     self.enemies[i].health -= bullets.bullets[k].damage
                     del bullets.bullets[k]
                     if self.enemies[i].health <= 0:
+                        # if enemy died save his bullets
+                        self.bullets.extend(self.enemies[i].bullets)
+
                         del self.enemies[i]
                         i -= 1
                         break
                     k -= 1
                 k += 1
             
+            # check if player arrows collide with enemies
             k = 0
             while k < len(arrows.arrows):
                 if arrows.arrows[k].get_hitbox().colliderect(self.enemies[i].rect):
                     self.enemies[i].health -= arrows.arrows[k].damage
                     del arrows.arrows[k]
                     if self.enemies[i].health <= 0:
+                        # if enemy died save his bullets
+                        self.bullets.extend(self.enemies[i].bullets)
+
                         del self.enemies[i]
                         i -= 1
                         break
@@ -510,6 +520,7 @@ class Enemies:
 
             i += 1
         
+        # check if bullets or arrows collide with player
         for enemy in self.enemies:
             i = 0
             while i < len(enemy.bullets.bullets):
@@ -518,6 +529,16 @@ class Enemies:
                     self.player.float_health -= 5
                 else:
                     i += 1
+        
+        # update bullets of dies enemies
+        self.bullets.update(scroll, self.rects)
+        i = 0
+        while i < len(self.bullets.bullets):
+            if self.bullets.bullets[i].get_hitbox().colliderect(self.player):
+                del self.bullets.bullets[i]
+                self.player.float_health -= 5
+            else:
+                i += 1
     
     def add_enemy(self, coords, targetx, targety):
         self.enemies.append(Enemy_Sniper(self.display, coords, self.rects, self.platforms, targetx, targety, self.player))

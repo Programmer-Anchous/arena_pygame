@@ -240,6 +240,9 @@ class Bullets:
     
     def add_bullet(self, start: tuple, end: tuple):
         self.bullets.append(Bullet(self.display, start, end, self.speed))
+    
+    def extend(self, bullets):
+        self.bullets.extend(bullets.bullets)
 
 
 class Arrows:
