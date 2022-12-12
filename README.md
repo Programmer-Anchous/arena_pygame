@@ -1,7 +1,11 @@
 # Arena Game
 
+<p align="right">The project is under development.</p>
+
 ## Gameplay
 ![image](/Preview/gameplay.jpg)
+
+<br>
 
 ## Movement
 |Keys        |Result                |
@@ -12,10 +16,3 @@
 |`D`         |moving right          |
 |`esc`       |open/close inventory  |
 |`ctrl + c`  |open/close console    |
-
-
-
-
-
-<br>
-<p align="right">The project is under development.</p>
