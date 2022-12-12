@@ -258,7 +258,7 @@ class Arrows:
             self.arrows[i].update(scroll)
             x, y = self.arrows[i].rect.center
             
-            if not ((-2000 < x < 2000) and (-2000 < y < 2000)) or self.arrows[i].rect.collidelist(rects) != -1:
+            if not ((-2000 < x < 2000) and (-2000 < y < 2000)) or self.arrows[i].get_hitbox().collidelist(rects) != -1:
                 del self.arrows[i]
             else:
                 i += 1

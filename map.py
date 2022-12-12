@@ -44,24 +44,46 @@ class Map:
         with open(filename, "r", encoding="utf-8") as file:
             self.data = file.read().split("\n")
         
+        self.mini_width = 4
+        self.minimap = pygame.Surface((len(self.data[0] * self.mini_width) + 10, len(self.data * self.mini_width) + 10))
+        self.minimap.set_alpha(130)
+
         for i in range(len(self.data)):
             for k in range(len(self.data[i])):
                 if self.data[i][k] == "p":
                     self.platforms.append(
                         Tile(pygame.Rect(k * self.tile_width, i * self.tile_width, self.tile_width, self.tile_width),
                              self.data[i][k], False, True))
+                    
+                    pygame.draw.rect(
+                        self.minimap, (180, 130, 10),
+                        pygame.Rect(k * self.mini_width + 5, i * self.mini_width + 5, self.mini_width, self.mini_width)
+                    )
                 
                 elif self.data[i][k] in "rl":
                     self.tile_rects.append(
                         Tile(pygame.Rect(k * self.tile_width, i * self.tile_width, self.tile_width, self.tile_width),
                              self.data[i][k], True))
+                    
+                    pygame.draw.rect(
+                        self.minimap, (200, 200, 200),
+                        pygame.Rect(k * self.mini_width + 5, i * self.mini_width + 5, self.mini_width, self.mini_width)
+                    )
                 
                 elif self.data[i][k] != " ":
                     self.tile_rects.append(
                         Tile(pygame.Rect(k * self.tile_width, i * self.tile_width, self.tile_width, self.tile_width),
                              self.data[i][k], False))
-        
+                    
+                    pygame.draw.rect(
+                        self.minimap, (200, 200, 200),
+                        pygame.Rect(k * self.mini_width + 5, i * self.mini_width + 5, self.mini_width, self.mini_width)
+                    )
+
         self.block_img = pygame.Rect(0, 0, 30, 30)
+    
+    def get_minimap(self):
+        return self.minimap
     
     def update(self, scroll):
         for i in range(len(self.data)):

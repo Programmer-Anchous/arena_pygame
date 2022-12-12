@@ -1,9 +1,14 @@
 import pygame
 import math
+import sys
 import random
+from time import sleep
 
 
-def load_image(file_name: str, *, ext: str='png', color_key: bool=True, scale: tuple=()) -> pygame.Surface:
+from data.font.font import *
+
+
+def load_image(file_name: str, *, ext: str='png', color_key: tuple | bool=True, scale: tuple=()) -> pygame.Surface:
     image = pygame.image.load(f'{file_name}.{ext}').convert()
     if color_key:
         image.set_colorkey((255, 255, 255))

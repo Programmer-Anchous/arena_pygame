@@ -371,7 +371,7 @@ class Enemy_Sniper(Entitiy):
         self.previous_coord = None
 
     def draw_health(self, scroll):
-        green = int(self.health * 2.55)
+        green = int(self.health * 2.25)
         pygame.draw.rect(self.display, (255 - green, green, 0),
                          (self.rect.centerx - scroll[0] - 15, self.rect.y - scroll[1] - 15, 0.3 * self.health, 10))
         pygame.draw.rect(self.display, (0, 0, 0),
@@ -530,7 +530,7 @@ class Enemies:
                 else:
                     i += 1
         
-        # update bullets of dies enemies
+        # update bullets of died enemies
         self.bullets.update(scroll, self.rects)
         i = 0
         while i < len(self.bullets.bullets):

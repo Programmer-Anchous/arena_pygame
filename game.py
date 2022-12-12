@@ -1,11 +1,7 @@
-import sys
-from time import sleep
-
 from tools import *
 from weapon import *
 from characters import *
 from map import *
-from data.font.font import *
 
 
 pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -193,7 +189,7 @@ class Generator:
 
 
 generator = Generator(tile_map, player, enemies)
-console = Console(display,font2, enemies, player)
+console = Console(display, font2, enemies, player)
 
 
 # scrolling of the objects when player is moving

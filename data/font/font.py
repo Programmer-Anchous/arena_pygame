@@ -48,7 +48,7 @@ class Font:
             else:
                 length += self.space_width
         length *= self.spacing
-        length += (self.spacing * len(text))
+        length += (self.spacing * (len(text) + 1))
         res_surf = pygame.Surface((length, self.space_height + 1))
         color_surf = pygame.Surface((length, self.space_height + 1))
         color_surf.fill(color)
