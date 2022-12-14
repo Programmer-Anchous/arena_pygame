@@ -4,6 +4,8 @@ from weapon import *
 from characters import *
 from map import *
 
+from time import sleep
+
 
 class Console:
     def __init__(self, display, font, enemies, player, WINDOW_SIZE):
@@ -151,6 +153,81 @@ class Generator:
                 )
 
 
+class SettingsMenu(Loop):
+    def user_init(self):
+        self.collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
+
+        self.to_main_menu_image = self.font4.render("to main menu", (220, 220, 220))
+        self.to_main_menu_pressed_image = self.font4.render(
+            "to main menu", (255, 255, 0)
+        )
+        self.to_main_menu_button = Button(
+            self.to_main_menu_image,
+            self.to_main_menu_pressed_image,
+            (self.WINDOW_SIZE[0] // 2 - self.to_main_menu_image.get_width() // 2, 400),
+            self.display,
+            self.collide_button_sound,
+        )
+
+        self.continue_image = self.font4.render("continue", (220, 220, 220))
+        self.continue_pressed_image = self.font4.render("continue", (255, 255, 0))
+        self.continue_button = Button(
+            self.continue_image,
+            self.continue_pressed_image,
+            (self.WINDOW_SIZE[0] // 2 - self.continue_image.get_width() // 2, 500),
+            self.display,
+            self.collide_button_sound,
+        )
+
+        self.background = None
+        self.clicked = False
+
+        self.closing = False
+    
+    def user_events(self):
+        self.display.blit(self.background, (0, 0))
+
+        self.alpha_surf = pygame.Surface(self.WINDOW_SIZE)
+        self.alpha_surf.set_alpha(150)
+        self.display.blit(self.alpha_surf, (0, 0))
+
+        self.to_main_menu_button.update()
+        self.continue_button.update()
+
+        self.clicked = False
+        
+        mx, my = pygame.mouse.get_pos()
+
+        for event in self.get_events():
+            if event.type == pygame.QUIT:
+                self.running = False
+                pygame.quit()
+                sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.clicked = True
+        
+        if self.to_main_menu_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.running = False
+                self.closing = True
+        
+        if self.continue_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.running = False
+    
+    def set_background(self, background: pygame.Surface) -> None:
+        self.background = background
+    
+    def get_status(self) -> bool:
+        status = self.closing
+        self.closing = False
+        return status
+
+
 class Game(Loop):
     def user_init(self):
         self.true_scroll = [0, 0]
@@ -172,14 +249,14 @@ class Game(Loop):
             self.player,
         )
 
-        self.to_main_menu_image = self.font3.render("to main menu", (220, 220, 220))
-        self.to_main_menu_pressed_image = self.font3.render(
-            "to main menu", (255, 255, 0)
+        self.settings_menu_image = self.font3.render("settings", (220, 220, 220))
+        self.settings_menu_pressed_image = self.font3.render(
+            "settings", (255, 255, 0)
         )
-        self.to_main_menu_button = Button(
-            self.to_main_menu_image,
-            self.to_main_menu_pressed_image,
-            (self.WINDOW_SIZE[0] - 185, self.WINDOW_SIZE[1] - 30),
+        self.settings_menu_button = Button(
+            self.settings_menu_image,
+            self.settings_menu_pressed_image,
+            (self.WINDOW_SIZE[0] - 130, self.WINDOW_SIZE[1] - 40),
             self.display,
             self.collide_button_sound,
         )
@@ -192,6 +269,10 @@ class Game(Loop):
         self.clicked = False
 
         self.mini_width = self.tile_map.mini_width
+
+        self.settings_menu = SettingsMenu(None, 60, "data/font/letters.png")
+
+        self.previous_display = self.display.copy()
 
     def user_events(self):
         scroll = self.parallax_scrolling()
@@ -235,6 +316,18 @@ class Game(Loop):
                         self.player.moving_right = False
                     if event.key == pygame.K_s:
                         self.player.moving_down = False
+        
+        if self.player.inventory.is_opened:
+            if self.settings_menu_button.collided(mx, my):
+                if self.clicked:
+                    sleep(0.1)
+                    self.settings_menu.set_background(self.previous_display)
+                    self.settings_menu.run()
+                    if self.settings_menu.get_status():
+                        self.running = False
+                    self.clicked = False
+
+            self.settings_menu_button.update()
 
         self.tile_map.update(scroll)
         self.player.update(scroll, mx, my, self.clicked)
@@ -248,13 +341,8 @@ class Game(Loop):
 
         self.draw_fps()
 
-        if self.player.inventory.is_opened:
-            if self.to_main_menu_button.collided(mx, my):
-                if self.clicked:
-                    sleep(0.1)
-                    self.loop_on = False
-
-            self.to_main_menu_button.update()
+        self.previous_display = self.display.copy()
+        
 
     def draw_minimap(self):
         minimap = self.tile_map.get_minimap().copy()
@@ -313,6 +401,66 @@ class Game(Loop):
         return [int(self.true_scroll[0]), int(self.true_scroll[1])]
 
 
+class MainMenu(Loop):
+    def user_init(self):
+        self.collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
+
+        # creating buttons
+        self.exit_image = self.font5.render("exit", (220, 220, 220))
+        self.exit_pressed_image = self.font5.render("exit", (255, 255, 0))
+        self.exit_button = Button(self.exit_image, self.exit_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.exit_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 160),
+                            self.display, self.collide_button_sound)
+
+        self.back_image = self.font5.render("back", (220, 220, 220))
+        self.back_pressed_image = self.font5.render("back", (255, 255, 0))
+        self.back_button = Button(self.back_image, self.back_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 160),
+                            self.display, self.collide_button_sound)
+
+        self.play_image = self.font5.render("play", (220, 220, 220))
+        self.play_pressed_image = self.font5.render("play", (255, 255, 0))
+        self.play_button = Button(self.play_image, self.play_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 60),
+                            self.display, self.collide_button_sound)
+        
+        self.main_game = Game(None, 60, "data/font/letters.png")
+
+        self.clicked = False
+    
+    def user_events(self):
+        mx, my = pygame.mouse.get_pos()
+        self.clicked = False
+
+        text = self.font3.render(f"fps {int(self.clock.get_fps())}", (255, 255, 255))
+        for event in self.get_events():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.clicked = True
+
+        if self.exit_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.running = False
+
+        if self.play_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.main_game.run()
+
+        self.display.blit(text, (10, 10))
+
+        self.play_button.update()
+        self.exit_button.update()
+
+
+
 if __name__ == "__main__":
-    game = Game(None, 60, "data/font/letters.png")
-    game.run()
+    # game = Game(None, 60, "data/font/letters.png")
+    # game.run()
+    main_ = MainMenu(None, 60, "data/font/letters.png")
+    main_.run()

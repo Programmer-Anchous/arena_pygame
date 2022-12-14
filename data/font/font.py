@@ -46,14 +46,14 @@ class Font:
             elif char in "!":
                 length += 1
             else:
-                length += self.space_width
+                length += 4
         length *= self.spacing
         length += (self.spacing * (len(text) + 1))
         res_surf = pygame.Surface((length, self.space_height + 1))
         color_surf = pygame.Surface((length, self.space_height + 1))
         color_surf.fill(color)
         color_surf.set_alpha(254)
-        # делаем шрифт цветным защёт заливания всей поверхности полупрозрачной поверхностью
+        # делаем шрифт цветным засчёт заливания всей поверхности полупрозрачной поверхностью
         x_offset = 0
         for char in text:
             if char != " ":
@@ -63,6 +63,8 @@ class Font:
                 x_offset += self.space_width + self.spacing
         res_surf.blit(color_surf, (0, 0))
         res_surf.set_colorkey(res_surf.get_at((0, self.space_height))[:3])
+
+        # pygame.draw.rect(res_surf, (80, 120, 200), (0, 0, *res_surf.get_size()), 2)  # for debugging
         return res_surf
 
 

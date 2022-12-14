@@ -25,26 +25,26 @@ class Loop:
         if font_path:
             self.font2 = Font(font_path, 2)
             self.font3 = Font(font_path, 3)
+            self.font4 = Font(font_path, 4)
+            self.font5 = Font(font_path, 5)
         
         self.user_init()
 
         self.loop_on = True
     
     def run(self):
-        if self.loop_on:
-            while self.running:
-                if not self.loop_on:
-                    self.running = False
-                self.display.fill((0, 0, 0))
+        while self.running:
+            self.display.fill((0, 0, 0))
 
-                self.action()
+            self.action()
 
-                self.user_events()
+            self.user_events()
 
-                self.screen.blit(self.display, (0, 0))
-                pygame.display.update()
-                self.clock.tick(self.FPS)
-            self.user_end_action()
+            self.screen.blit(self.display, (0, 0))
+            pygame.display.update()
+            self.clock.tick(self.FPS)
+        self.user_end_action()
+        self.running = True
     
     def action(self):
         self.events = pygame.event.get()

@@ -1,7 +1,6 @@
 import sys
 
 from tools import *
-from data.font.font import *
 from game import main_game
 from time import sleep
 

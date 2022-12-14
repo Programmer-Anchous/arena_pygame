@@ -105,6 +105,7 @@ def move(rect: pygame.Rect, movement: tuple, tiles) -> tuple:
                 bottom_rect.bottom = platform.rect.top
                 rect.bottom = platform.rect.top
                 collision_types['bottom'] = True
+    
     return rect, collision_types
 
 # collide_functions_end_____________________________________________________#
