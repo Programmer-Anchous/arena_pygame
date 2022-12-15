@@ -4,8 +4,6 @@ from weapon import *
 from characters import *
 from map import *
 
-from time import sleep
-
 
 class Console:
     def __init__(self, display, font, enemies, player, WINDOW_SIZE):
@@ -48,6 +46,12 @@ class Console:
 
         self.history = ["", "/killall", "/fullhp"]
         self.index = 0
+
+        self.background_surf = pygame.Surface((self.info.get_width(), self.info.get_height() + 20))
+        pygame.draw.rect(self.background_surf, (20, 20, 20), (0, 0, *self.background_surf.get_size()), 0, 5)
+        pygame.draw.rect(self.background_surf, (40, 40, 40), (0, 0, *self.background_surf.get_size()), 2, 5)
+        self.background_surf.set_alpha(200)
+        self.background_surf.set_colorkey((0, 0, 0))
 
     def update(self, events):
         for event in events:
@@ -124,8 +128,10 @@ class Console:
                 self.display.blit(rendered_text, (20, self.WINDOW_SIZE[1] - 32))
 
             self.user_text = self.history[self.index]
+            coords = (20, self.WINDOW_SIZE[1] - self.info.get_height() - 60)
+            self.display.blit(self.background_surf, (coords[0] - 10, coords[1] - 13))
             self.display.blit(
-                self.info, (20, self.WINDOW_SIZE[1] - self.info.get_height() - 60)
+                self.info, coords
             )
 
     def change(self):
@@ -279,6 +285,8 @@ class Game(Loop):
         mx, my = pygame.mouse.get_pos()
         self.clicked = False
 
+        self.display.blit(self.background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
+
         for event in self.get_events():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -317,7 +325,8 @@ class Game(Loop):
                     if event.key == pygame.K_s:
                         self.player.moving_down = False
         
-        if self.player.inventory.is_opened:
+        inventory_is_opened = self.player.inventory.is_opened
+        if inventory_is_opened:
             if self.settings_menu_button.collided(mx, my):
                 if self.clicked:
                     sleep(0.1)
@@ -326,8 +335,6 @@ class Game(Loop):
                     if self.settings_menu.get_status():
                         self.running = False
                     self.clicked = False
-
-            self.settings_menu_button.update()
 
         self.tile_map.update(scroll)
         self.player.update(scroll, mx, my, self.clicked)
@@ -340,6 +347,9 @@ class Game(Loop):
         self.draw_minimap()
 
         self.draw_fps()
+
+        if inventory_is_opened:
+            self.settings_menu_button.update()
 
         self.previous_display = self.display.copy()
 
@@ -457,9 +467,8 @@ class MainMenu(Loop):
         self.exit_button.update()
 
 
-
 if __name__ == "__main__":
-    # game = Game(None, 60, "data/font/letters.png")
-    # game.run()
-    main_ = MainMenu(None, 60, "data/font/letters.png")
-    main_.run()
+    game = Game(None, 60, "data/font/letters.png")
+    game.run()
+    # main_ = MainMenu(None, 60, "data/font/letters.png")
+    # main_.run()

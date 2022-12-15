@@ -137,10 +137,14 @@ class Player(Entitiy):
         self.rects = rects
         self.platforms = platforms
         self.WINDOW_SIZE = WINDOW_SIZE
-        self.image = pygame.Surface((30, 50))
-        self.image.fill((10, 20, 200))
-        pygame.draw.rect(self.image, (5, 10, 150), (0, 0, 30, 50), 5)
-        self.rect = self.image.get_rect(topleft=coords)
+        # self.image = pygame.Surface((30, 50))
+        # self.image.fill((10, 20, 200))
+        # pygame.draw.rect(self.image, (5, 10, 150), (0, 0, 30, 50), 5)
+        # self.rect = self.image.get_rect(topleft=coords)
+        self.animation_database['run'] = load_animation('data/animations/player/run', [6] * 6, self.animation_frames)
+        self.animation_database['idle'] = load_animation('data/animations/player/idle', [15] * 4, self.animation_frames)
+        self.image = self.animation_database['idle'][0]
+        self.rect = self.animation_frames["idle_0"].get_rect(topleft=coords)
 
         self.item = None
 
@@ -154,7 +158,8 @@ class Player(Entitiy):
         self.arrows = Arrows(display, 14, 0.15)
 
         self.moving_down_counter = 0
-        self.real_moving_down = False  # for platforms 
+        self.real_moving_down = False  # for platforms
+        self.moving_down_limit = 5
 
         self.float_health = 100
         self.health = self.float_health
@@ -162,6 +167,46 @@ class Player(Entitiy):
         self.gravity = 1
         self.speed = 5
     
+    def update(self, scroll, mx, my, clicked):
+        self.float_health += 0.005
+        if self.float_health > 100:
+            self.float_health = 100
+        
+        self.health = int(self.float_health)
+        self.move()
+
+        # animations
+        if pygame.mouse.get_pos()[0] < self.rect.center[0] - scroll[0]:
+            self.player_flip = True
+        else:
+            self.player_flip = False
+
+        if self.movement[0] == 0:
+            self.player_action, self.player_frame = change_action(self.player_action, self.player_frame, 'idle')
+        else:
+            self.player_action, self.player_frame = change_action(self.player_action, self.player_frame, 'run')
+            if self.movement[0] < 0:
+                self.player_flip = True
+            else:
+                self.player_flip = False
+        self.player_frame += 1
+        if self.player_frame >= len(self.animation_database[self.player_action]):
+            self.player_frame = 0
+        self.player_image_id = self.animation_database[self.player_action][self.player_frame]
+        self.image = self.animation_frames[self.player_image_id]
+
+        self.display.blit(pygame.transform.flip(self.image, self.player_flip, False),
+                     (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+        # self.display.blit(self.image, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
+        self.update_item(scroll, mx, my, self)
+
+        self.draw_healthbar()
+
+        self.update_inventory()
+        self.mouse_event(scroll, mx, my, clicked)
+
     def fire(self, scroll, mx, my):
         mx += scroll[0]
         my += scroll[1]
@@ -238,7 +283,7 @@ class Player(Entitiy):
         
         if self.moving_down == True:
             self.real_moving_down = True
-            self.moving_down_counter = 10
+            self.moving_down_counter = self.moving_down_limit
         
         self.moving_down_counter -= 1
         if self.moving_down_counter <= 0:
@@ -258,20 +303,6 @@ class Player(Entitiy):
     def jump(self):
         if self.air_timer < 6:
             self.player_y_momentum = -20  # jumping
-
-    def update(self, scroll, mx, my, clicked):
-        self.float_health += 0.005
-        if self.float_health > 100:
-            self.float_health = 100
-        self.health = int(self.float_health)
-        self.move()
-        self.display.blit(self.image, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
-        self.update_item(scroll, mx, my, self)
-
-        self.draw_healthbar()
-
-        self.update_inventory()
-        self.mouse_event(scroll, mx, my, clicked)
     
     def update_inventory(self):
         self.inventory.update()
@@ -348,10 +379,14 @@ class Enemy_Sniper(Entitiy):
         self.moving_down_counter = 0
         self.real_moving_down = False  # for platforms 
 
-        self.image = pygame.Surface((30, 50))
-        self.image.fill((200, 20, 10))
-        pygame.draw.rect(self.image, (150, 10, 5), (0, 0, 30, 50), 5)
-        self.rect = self.image.get_rect(topleft=coords)
+        # self.image = pygame.Surface((30, 50))
+        # self.image.fill((200, 20, 10))
+        # pygame.draw.rect(self.image, (150, 10, 5), (0, 0, 30, 50), 5)
+        # self.rect = self.image.get_rect(topleft=coords)
+        self.animation_database['run'] = load_animation('data/animations/player/run', [7] * 6, self.animation_frames)
+        self.animation_database['idle'] = load_animation('data/animations/player/idle', [18] * 4, self.animation_frames)
+        self.image = self.animation_database['idle'][0]
+        self.rect = self.animation_frames["idle_0"].get_rect(topleft=coords)
 
         self.current_item = Gun
         self.bullets = Bullets(self.display, 11)
@@ -383,8 +418,26 @@ class Enemy_Sniper(Entitiy):
         self.move()
         self.update_bullets(scroll)
 
+        # animations
+        if self.movement[0] == 0:
+            self.player_action, self.player_frame = change_action(self.player_action, self.player_frame, 'idle')
+        else:
+            self.player_action, self.player_frame = change_action(self.player_action, self.player_frame, 'run')
+            if self.movement[0] < 0:
+                self.player_flip = True
+            else:
+                self.player_flip = False
+        self.player_frame += 1
+        if self.player_frame >= len(self.animation_database[self.player_action]):
+            self.player_frame = 0
+        self.player_image_id = self.animation_database[self.player_action][self.player_frame]
+        self.image = self.animation_frames[self.player_image_id]
         self.display.blit(pygame.transform.flip(self.image, self.player_flip, False),
                      (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        
+        # self.display.blit(pygame.transform.flip(self.image, self.player_flip, False),
+        #              (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+
         self.draw_health(scroll)
 
     def draw_health(self, scroll):

@@ -3,7 +3,6 @@ import math
 import sys
 import random
 from time import sleep
-from typing import Callable
 
 
 from data.font.font import *
