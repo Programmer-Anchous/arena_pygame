@@ -3,6 +3,7 @@ import math
 import sys
 import random
 from time import sleep
+from typing import Callable
 
 
 from data.font.font import *
@@ -148,3 +149,8 @@ def to_deg(rad: float) -> float:
 
 def to_rad(deg: float) -> float:
     return deg * (math.pi / 180)
+
+
+# function for chance in the game
+def chance(num: float = 1.00) -> int:
+    return random.randrange(0, 101) <= (round(num, 2) * 100)

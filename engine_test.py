@@ -342,7 +342,6 @@ class Game(Loop):
         self.draw_fps()
 
         self.previous_display = self.display.copy()
-        
 
     def draw_minimap(self):
         minimap = self.tile_map.get_minimap().copy()

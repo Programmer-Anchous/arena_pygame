@@ -370,6 +370,23 @@ class Enemy_Sniper(Entitiy):
 
         self.previous_coord = None
 
+        self.distance = None
+
+    def update(self, scroll):
+        self.distance = self.get_distance()
+        if self.distance < 800:
+            self.fire_counter += 1
+            if self.fire_counter > self.fire_limit:
+                self.fire_counter = 0
+                self.fire(self.player.rect)
+
+        self.move()
+        self.update_bullets(scroll)
+
+        self.display.blit(pygame.transform.flip(self.image, self.player_flip, False),
+                     (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        self.draw_health(scroll)
+
     def draw_health(self, scroll):
         green = int(self.health * 2.25)
         pygame.draw.rect(self.display, (255 - green, green, 0),
@@ -396,6 +413,19 @@ class Enemy_Sniper(Entitiy):
         if self.moving_down_counter <= 0:
             self.real_moving_down = False
             self.moving_down_counter = 0
+        
+        # following the player if he is close to the enemy
+        if self.distance < 500:
+            if self.get_x_distance() > 180:
+                if self.rect.x < self.player.rect.x:
+                    self.moving_right = True
+                    self.moving_left = False
+                elif self.rect.x > self.player.rect.x:
+                    self.moving_right = False
+                    self.moving_left = True
+        
+        if self.rect.y > self.player.rect.y and chance(0.01):
+            self.jump()
         
         # falling from platforms if player located lower then enemy
         if self.collisions["bottom"] and (self.player.rect.bottom - self.rect.bottom) > 30:
@@ -453,19 +483,12 @@ class Enemy_Sniper(Entitiy):
 
     def fire(self, rect):
         self.bullets.add_bullet((self.rect.x + 28, self.rect.y + 32), rect.center)
-
-    def update(self, scroll):
-        self.fire_counter += 1
-        if self.fire_counter > self.fire_limit:
-            self.fire_counter = 0
-            self.fire(self.player.rect)
-
-        self.move()
-        self.update_bullets(scroll)
-
-        self.display.blit(pygame.transform.flip(self.image, self.player_flip, False),
-                     (self.rect.x - scroll[0], self.rect.y - scroll[1]))
-        self.draw_health(scroll)
+    
+    def get_distance(self) -> int:
+        return int(math.hypot(self.rect.x - self.player.rect.x, self.rect.y - self.player.rect.y))
+    
+    def get_x_distance(self) -> int:
+        return abs(self.rect.x - self.player.rect.x)
 
 
 class Enemies:
