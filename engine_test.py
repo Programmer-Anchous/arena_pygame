@@ -145,18 +145,32 @@ class Generator:
         self.player = player
         self.enemies = enemies
 
-        self.counter = 290
+        self.length_x = self.tile_map.tile_width * self.tile_map.max_width - 50
+        self.length_y = self.tile_map.tile_width * len(self.tile_map.data) - 100
+
+        self.counter = 0
+        self.spawn_time_max = 500
+        self.spawn_time_min = 50
+        self.spawn_time_limit = self.spawn_time_max
+        self.acceleration = 0.1
 
     def update(self):
         self.counter += 1
-        if self.counter % 300 == 0:
+        
+        self.spawn_time_limit -= self.acceleration
+        if self.spawn_time_limit < self.spawn_time_min:
+            self.spawn_time_limit = self.spawn_time_min
+        
+        if self.counter > int(self.spawn_time_limit):
             self.counter = 0
-            if len(self.enemies.enemies) < 1:
+            if len(self.enemies.enemies) < 50:
                 self.enemies.add_enemy(
-                    (random.randint(100, 200), random.randint(100, 110)),
+                    (random.randint(150, self.length_x), random.randint(150, self.length_y)),
                     random.randint(-500, -400),
                     random.randint(2100, 2200),
                 )
+            else:
+                self.spawn_time_limit = self.spawn_time_max
 
 
 class SettingsMenu(Loop):
@@ -243,7 +257,7 @@ class Game(Loop):
         self.tile_map = Map(self.display, "data/map.txt")
         self.player = Player(
             self.display,
-            (200, 50),
+            self.tile_map.player_spawn,
             self.tile_map.get_rects(),
             self.tile_map.get_platforms(),
             self.WINDOW_SIZE,
@@ -277,15 +291,22 @@ class Game(Loop):
         self.mini_width = self.tile_map.mini_width
 
         self.settings_menu = SettingsMenu(None, 60, "data/font/letters.png")
-
         self.previous_display = self.display.copy()
+
+        self.score = 0
+        self.speed = 1 / self.FPS
+    
+    def update_score(self):
+        self.score += self.speed
+        text = self.font3.render(f"time {(int(self.score))}", (220, 220, 220))
+        self.display.blit(text, (self.WINDOW_SIZE[0] // 2 - text.get_width() // 2, 10))
 
     def user_events(self):
         scroll = self.parallax_scrolling()
         mx, my = pygame.mouse.get_pos()
         self.clicked = False
 
-        self.display.blit(self.background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
+        # self.display.blit(self.background, (-scroll[0] * 0.1 - 400, -scroll[1] * 0.1 - 350))
 
         for event in self.get_events():
             if event.type == pygame.QUIT:
@@ -345,13 +366,16 @@ class Game(Loop):
         self.console.update(self.events)
 
         self.draw_minimap()
-
         self.draw_fps()
+        self.update_score()
 
         if inventory_is_opened:
             self.settings_menu_button.update()
 
         self.previous_display = self.display.copy()
+
+        if self.player.health <= 0:
+            self.running = False
 
     def draw_minimap(self):
         minimap = self.tile_map.get_minimap().copy()

@@ -137,10 +137,7 @@ class Player(Entitiy):
         self.rects = rects
         self.platforms = platforms
         self.WINDOW_SIZE = WINDOW_SIZE
-        # self.image = pygame.Surface((30, 50))
-        # self.image.fill((10, 20, 200))
-        # pygame.draw.rect(self.image, (5, 10, 150), (0, 0, 30, 50), 5)
-        # self.rect = self.image.get_rect(topleft=coords)
+
         self.animation_database['run'] = load_animation('data/animations/player/run', [6] * 6, self.animation_frames)
         self.animation_database['idle'] = load_animation('data/animations/player/idle', [15] * 4, self.animation_frames)
         self.image = self.animation_database['idle'][0]
@@ -263,7 +260,8 @@ class Player(Entitiy):
                     self.fire(scroll, mx, my)
             
         if self.inventory.draged:
-            self.display.blit(self.inventory.draged_item.icon, (mx, my))
+            icon = self.inventory.draged_item.icon
+            self.display.blit(icon, (mx - icon.get_width() // 2 + 30, my - icon.get_height() // 2 + 30))
     
     def move(self):
         self.movement = [0, 0]
@@ -379,26 +377,22 @@ class Enemy_Sniper(Entitiy):
         self.moving_down_counter = 0
         self.real_moving_down = False  # for platforms 
 
-        # self.image = pygame.Surface((30, 50))
-        # self.image.fill((200, 20, 10))
-        # pygame.draw.rect(self.image, (150, 10, 5), (0, 0, 30, 50), 5)
-        # self.rect = self.image.get_rect(topleft=coords)
-        self.animation_database['run'] = load_animation('data/animations/player/run', [7] * 6, self.animation_frames)
-        self.animation_database['idle'] = load_animation('data/animations/player/idle', [18] * 4, self.animation_frames)
+        self.animation_database['run'] = load_animation('data/animations/enemy/run', [7] * 6, self.animation_frames)
+        self.animation_database['idle'] = load_animation('data/animations/enemy/idle', [18] * 4, self.animation_frames)
         self.image = self.animation_database['idle'][0]
         self.rect = self.animation_frames["idle_0"].get_rect(topleft=coords)
 
         self.current_item = Gun
         self.bullets = Bullets(self.display, 11)
         self.fire_counter = 0
-        self.fire_limit = 150
+        self.fire_limit = random.randrange(130, 170)
 
         self.health = 100
 
         self.player = player
 
         self.gravity = 1
-        self.speed = 4
+        self.speed = random.randrange(3, 6)
         self.jump_force = 17
         self.is_jumping = False
         self.prev_is_jumping = False
@@ -406,6 +400,8 @@ class Enemy_Sniper(Entitiy):
         self.previous_coord = None
 
         self.distance = None
+
+        self.gun = Gun(display)
 
     def update(self, scroll):
         self.distance = self.get_distance()
@@ -437,8 +433,19 @@ class Enemy_Sniper(Entitiy):
         
         # self.display.blit(pygame.transform.flip(self.image, self.player_flip, False),
         #              (self.rect.x - scroll[0], self.rect.y - scroll[1]))
+        self.update_item(scroll)
 
         self.draw_health(scroll)
+
+    def update_item(self, scroll):
+        if self.distance < 800:
+            x, y = self.player.rect.x - scroll[0], self.player.rect.y - scroll[1] + 30
+        else:
+            if self.moving_right:
+                x, y = self.rect.x - scroll[0] + 100, self.rect.y - scroll[1] + 30
+            elif self.moving_left:
+                x, y = self.rect.x - scroll[0] - 100, self.rect.y - scroll[1] + 30
+        self.gun.update(scroll, x, y, self)
 
     def draw_health(self, scroll):
         green = int(self.health * 2.25)
@@ -469,7 +476,7 @@ class Enemy_Sniper(Entitiy):
         
         # following the player if he is close to the enemy
         if self.distance < 500:
-            if self.get_x_distance() > 180:
+            if self.get_x_distance() > 200:
                 if self.rect.x < self.player.rect.x:
                     self.moving_right = True
                     self.moving_left = False

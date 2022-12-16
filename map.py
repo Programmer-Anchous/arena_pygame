@@ -40,12 +40,15 @@ class Map:
             "r": right_ramp,
             "p": platform
         }
+        self.player_spawn = (0, 0)
 
         with open(filename, "r", encoding="utf-8") as file:
             self.data = file.read().split("\n")
+            self.max_width = max(map(len, self.data))
+            self.data = list(map(list, self.data))
         
         self.mini_width = 4
-        self.minimap = pygame.Surface((len(self.data[0] * self.mini_width) + 10, len(self.data * self.mini_width) + 10))
+        self.minimap = pygame.Surface((self.max_width * self.mini_width + 10, len(self.data) * self.mini_width + 10))
         self.minimap.set_alpha(130)
 
         for i in range(len(self.data)):
@@ -69,6 +72,10 @@ class Map:
                         self.minimap, (200, 200, 200),
                         pygame.Rect(k * self.mini_width + 5, i * self.mini_width + 5, self.mini_width, self.mini_width)
                     )
+                
+                elif self.data[i][k] == "@":
+                        self.player_spawn = (k * self.tile_width, i * self.tile_width)
+                        self.data[i][k] = " "
                 
                 elif self.data[i][k] != " ":
                     self.tile_rects.append(
