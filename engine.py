@@ -2,17 +2,24 @@ from tools import *
 
 
 class Loop:
-    def __init__(self, WINDOW_SIZE: tuple | None = None, FPS: int = 60, font_path: None | str = None):
+    def __init__(self, WINDOW_SIZE: tuple | None = None, FPS: int = 60, font_path: None | str = None, screen = None):
+        initialized = pygame.display.get_init()
         pygame.mixer.pre_init(44100, -16, 2, 512)
         pygame.init()
 
-        if WINDOW_SIZE:
-            self.WINDOW_SIZE = WINDOW_SIZE
-            self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
+        if not screen:
+            if WINDOW_SIZE:
+                self.WINDOW_SIZE = WINDOW_SIZE
+                if not initialized:
+                    self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
+            else:
+                WINDOW_SIZE = pygame.display.Info()
+                self.WINDOW_SIZE = (WINDOW_SIZE.current_w, WINDOW_SIZE.current_h)
+                if not initialized:
+                    self.screen = pygame.display.set_mode(self.WINDOW_SIZE, pygame.FULLSCREEN)
         else:
-            WINDOW_SIZE = pygame.display.Info()
-            self.WINDOW_SIZE = (WINDOW_SIZE.current_w, WINDOW_SIZE.current_h)
-            self.screen = pygame.display.set_mode(self.WINDOW_SIZE, pygame.FULLSCREEN)
+            self.screen = screen
+            self.WINDOW_SIZE = self.screen.get_size()
         
         self.FPS = FPS
         

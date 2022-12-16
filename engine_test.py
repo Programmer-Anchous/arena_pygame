@@ -145,8 +145,8 @@ class Generator:
         self.player = player
         self.enemies = enemies
 
-        self.length_x = self.tile_map.tile_width * self.tile_map.max_width - 50
-        self.length_y = self.tile_map.tile_width * len(self.tile_map.data) - 100
+        self.length_x = self.tile_map.tile_width * self.tile_map.max_width - 200
+        self.length_y = self.tile_map.tile_width * len(self.tile_map.data) - 200
 
         self.counter = 0
         self.spawn_time_max = 500
@@ -156,7 +156,7 @@ class Generator:
 
     def update(self):
         self.counter += 1
-        
+
         self.spawn_time_limit -= self.acceleration
         if self.spawn_time_limit < self.spawn_time_min:
             self.spawn_time_limit = self.spawn_time_min
@@ -165,7 +165,7 @@ class Generator:
             self.counter = 0
             if len(self.enemies.enemies) < 50:
                 self.enemies.add_enemy(
-                    (random.randint(150, self.length_x), random.randint(150, self.length_y)),
+                    (random.randint(200, self.length_x), random.randint(200, self.length_y)),
                     random.randint(-500, -400),
                     random.randint(2100, 2200),
                 )
@@ -249,12 +249,16 @@ class SettingsMenu(Loop):
 
 
 class Game(Loop):
+    def __init__(self, WINDOW_SIZE: tuple | None = None, FPS: int = 60, font_path: None | str = None, screen=None, map_path = "data/maps/map.txt"):
+        self.tile_map_path = map_path
+        super().__init__(WINDOW_SIZE, FPS, font_path, screen)
+
     def user_init(self):
         self.true_scroll = [0, 0]
         self.background = load_image("data/images/bg", scale=(2, 2))
         self.collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
 
-        self.tile_map = Map(self.display, "data/map.txt")
+        self.tile_map = Map(self.display, self.tile_map_path)
         self.player = Player(
             self.display,
             self.tile_map.player_spawn,
@@ -290,7 +294,7 @@ class Game(Loop):
 
         self.mini_width = self.tile_map.mini_width
 
-        self.settings_menu = SettingsMenu(None, 60, "data/font/letters.png")
+        self.settings_menu = SettingsMenu(None, 60, "data/font/letters.png", self.screen)
         self.previous_display = self.display.copy()
 
         self.score = 0
@@ -434,6 +438,64 @@ class Game(Loop):
         return [int(self.true_scroll[0]), int(self.true_scroll[1])]
 
 
+class ChooseMapMenu(Loop):
+    def user_init(self):
+        self.collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
+
+        self.back_image = self.font5.render("back", (220, 220, 220))
+        self.back_pressed_image = self.font5.render("back", (255, 255, 0))
+        self.back_button = Button(self.back_image, self.back_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 100),
+                            self.display, self.collide_button_sound)
+        
+        self.classic_image = self.font5.render("classic", (220, 220, 220))
+        self.classic_pressed_image = self.font5.render("classic", (255, 255, 0))
+        self.classic_button = Button(self.classic_image, self.classic_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.classic_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 - 100),
+                            self.display, self.collide_button_sound)
+        
+        self.romb_image = self.font5.render("romb", (220, 220, 220))
+        self.romb_pressed_image = self.font5.render("romb", (255, 255, 0))
+        self.romb_button = Button(self.romb_image, self.romb_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.romb_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 0),
+                            self.display, self.collide_button_sound)
+        
+        self.result_map = "classic"
+        
+    def user_events(self):
+        mx, my = pygame.mouse.get_pos()
+        self.clicked = False
+
+        for event in self.get_events():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.clicked = True
+        
+        if self.back_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.running = False
+                return self.result_map
+        
+        if self.classic_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.result_map = "classic"
+        
+        if self.romb_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.result_map = "romb"
+        
+        self.classic_button.update()
+        self.romb_button.update()
+        self.back_button.update()
+
+
 class MainMenu(Loop):
     def user_init(self):
         self.collide_button_sound = pygame.mixer.Sound("data/sounds/button.mp3")
@@ -442,22 +504,35 @@ class MainMenu(Loop):
         self.exit_image = self.font5.render("exit", (220, 220, 220))
         self.exit_pressed_image = self.font5.render("exit", (255, 255, 0))
         self.exit_button = Button(self.exit_image, self.exit_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.exit_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 160),
+                            (self.WINDOW_SIZE[0] // 2 - self.exit_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 100),
                             self.display, self.collide_button_sound)
 
-        self.back_image = self.font5.render("back", (220, 220, 220))
-        self.back_pressed_image = self.font5.render("back", (255, 255, 0))
-        self.back_button = Button(self.back_image, self.back_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 160),
-                            self.display, self.collide_button_sound)
+        # self.back_image = self.font5.render("back", (220, 220, 220))
+        # self.back_pressed_image = self.font5.render("back", (255, 255, 0))
+        # self.back_button = Button(self.back_image, self.back_pressed_image,
+        #                     (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 160),
+        #                     self.display, self.collide_button_sound)
 
         self.play_image = self.font5.render("play", (220, 220, 220))
         self.play_pressed_image = self.font5.render("play", (255, 255, 0))
         self.play_button = Button(self.play_image, self.play_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 60),
+                            (self.WINDOW_SIZE[0] // 2 - self.play_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 - 100),
                             self.display, self.collide_button_sound)
         
-        self.main_game = Game(None, 60, "data/font/letters.png")
+        self.choose_map_image = self.font5.render("choose map", (220, 220, 220))
+        self.choose_map_pressed_image = self.font5.render("choose map", (255, 255, 0))
+        self.choose_map_button = Button(self.choose_map_image, self.choose_map_pressed_image,
+                            (self.WINDOW_SIZE[0] // 2 - self.choose_map_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 0),
+                            self.display, self.collide_button_sound)
+        
+        self.maps = {
+            "classic": "data/maps/map.txt",
+            "romb": "data/maps/map1.txt"
+        }
+        self.current_map = "classic"
+        
+        # self.main_game = Game(None, 60, "data/font/letters.png", self.screen, "data/maps/map1.txt")
+        self.choose_map_menu = ChooseMapMenu(None, 60, "data/font/letters.png", self.screen)
 
         self.clicked = False
     
@@ -465,15 +540,14 @@ class MainMenu(Loop):
         mx, my = pygame.mouse.get_pos()
         self.clicked = False
 
-        text = self.font3.render(f"fps {int(self.clock.get_fps())}", (255, 255, 255))
         for event in self.get_events():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        self.clicked = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.clicked = True
 
         if self.exit_button.collided(mx, my):
             if self.clicked:
@@ -483,16 +557,24 @@ class MainMenu(Loop):
         if self.play_button.collided(mx, my):
             if self.clicked:
                 sleep(0.1)
-                self.main_game.run()
+                # self.main_game.run()
 
-        self.display.blit(text, (10, 10))
+                # always start new game
+                Game(None, 60, "data/font/letters.png", self.screen, self.maps[self.current_map]).run()
+        
+        if self.choose_map_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.choose_map_menu.run()
+                self.current_map = self.choose_map_menu.result_map
 
         self.play_button.update()
         self.exit_button.update()
+        self.choose_map_button.update()
 
 
 if __name__ == "__main__":
-    game = Game(None, 60, "data/font/letters.png")
-    game.run()
-    # main_ = MainMenu(None, 60, "data/font/letters.png")
-    # main_.run()
+    # game = Game(None, 60, "data/font/letters.png")
+    # game.run()
+    main_ = MainMenu(None, 60, "data/font/letters.png")
+    main_.run()
