@@ -16,3 +16,9 @@
 |`D`         |moving right          |
 |`esc`       |open/close inventory  |
 |`ctrl + c`  |open/close console    |
+
+
+<br>
+
+P.S. <br>
+I am not the author of some images and sounds in game, I downloaded them from the internet.

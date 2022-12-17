@@ -163,6 +163,21 @@ class Player(Entitiy):
 
         self.gravity = 1
         self.speed = 5
+
+        self.bullet_sound = pygame.mixer.Sound("data/sounds/bullet1.mp3")
+        # self.bullet_sound.set_volume(1)
+
+        self.arrow_sound = pygame.mixer.Sound("data/sounds/arrow.mp3")
+        self.arrow_sound.set_volume(0.2)
+
+        self.hurt_sounds = [
+            pygame.mixer.Sound("data/sounds/hurt.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt1.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt2.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt3.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt4.mp3"),
+        ]
+        self.death_sound = pygame.mixer.Sound("data/sounds/death.mp3")
     
     def update(self, scroll, mx, my, clicked):
         self.float_health += 0.005
@@ -210,7 +225,9 @@ class Player(Entitiy):
         if check_if_weapon(self.item):
             if isinstance(self.item, Gun):
                 self.bullets.add_bullet(self.rect.center, (mx, my))
+                self.bullet_sound.play()
             elif isinstance(self.item, Bow):
+                self.arrow_sound.play()
                 self.arrows.add_arrow(self.rect.center, (mx, my))
     
     def update_item(self, scroll, mx, my, player):
@@ -560,11 +577,34 @@ class Enemies:
         self.player = player
 
         self.bullets = Bullets(display, 11)
+
+        self.hurt_sounds = [
+            pygame.mixer.Sound("data/sounds/hurt.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt1.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt2.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt3.mp3"),
+            pygame.mixer.Sound("data/sounds/hurt4.mp3"),
+        ]
+        for sound in self.hurt_sounds:
+            sound.set_volume(0.5)
+        self.death_sound = pygame.mixer.Sound("data/sounds/death.mp3")
+        self.death_sound.set_volume(0.5)
+
+        self.sound_pause = 50
+        self.sound_counter = 0
+
+        self.enemy_killed = False
     
     def kill_all(self):
         self.enemies.clear()
     
     def update(self, scroll, bullets, arrows):
+        self.enemy_killed = False
+
+        self.sound_counter -= 1
+        if self.sound_counter < 0:
+            self.sound_counter = 0
+        
         i = 0
         while i < len(self.enemies):
             self.enemies[i].update(scroll)
@@ -576,12 +616,20 @@ class Enemies:
                     self.enemies[i].health -= bullets.bullets[k].damage
                     del bullets.bullets[k]
                     if self.enemies[i].health <= 0:
+                        self.enemy_killed = True
+                        if chance(0.2):
+                            self.sound_counter = self.sound_pause
+                            self.death_sound.play()
+                        
                         # if enemy died save his bullets
                         self.bullets.extend(self.enemies[i].bullets)
-
                         del self.enemies[i]
                         i -= 1
                         break
+                    else:
+                        if self.sound_counter == 0:
+                            self.sound_counter = self.sound_pause
+                            self.hurt_sounds[random.randrange(len(self.hurt_sounds))].play()
                     k -= 1
                 k += 1
             
@@ -592,18 +640,26 @@ class Enemies:
                     self.enemies[i].health -= arrows.arrows[k].damage
                     del arrows.arrows[k]
                     if self.enemies[i].health <= 0:
+                        self.enemy_killed = True
+                        if chance(0.2):
+                            self.sound_counter = self.sound_pause
+                            self.death_sound.play()
+                        
                         # if enemy died save his bullets
                         self.bullets.extend(self.enemies[i].bullets)
-
                         del self.enemies[i]
                         i -= 1
                         break
+                    else:
+                        if self.sound_counter == 0:
+                            self.sound_counter = self.sound_pause
+                            self.hurt_sounds[random.randrange(len(self.hurt_sounds))].play()
                     k -= 1
                 k += 1
 
             i += 1
         
-        # check if bullets or arrows collide with player
+        # check if enemies bullets or arrows collide with player
         for enemy in self.enemies:
             i = 0
             while i < len(enemy.bullets.bullets):

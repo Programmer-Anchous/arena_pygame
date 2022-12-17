@@ -104,3 +104,29 @@ class Map:
     
     def get_platforms(self):
         return self.platforms
+    
+    @classmethod
+    def get_minimap_from_file(self, filename: str) -> pygame.Surface:
+        with open(filename, "r", encoding="utf-8") as file:
+            data = file.read().split("\n")
+            max_width = max(map(len, data))
+            data = list(map(list, data))
+        
+            mini_width = 4
+            minimap = pygame.Surface((max_width * mini_width + 10, len(data) * mini_width + 10))
+
+            for i in range(len(data)):
+                for k in range(len(data[i])):
+                    if data[i][k] == "p":
+                        pygame.draw.rect(
+                            minimap, (150, 100, 50),
+                            pygame.Rect(k * mini_width + 5, i * mini_width + 5, mini_width, mini_width)
+                        )
+                    elif data[i][k] in "rls":
+                        pygame.draw.rect(
+                            minimap, (100, 100, 100),
+                            pygame.Rect(k * mini_width + 5, i * mini_width + 5, mini_width, mini_width)
+                        )
+            minimap.set_colorkey((0, 0, 0))
+
+            return minimap
