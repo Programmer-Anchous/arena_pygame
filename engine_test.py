@@ -60,6 +60,8 @@ class Console:
         self.commands = {
             "/killall": self.enemies.kill_all,
             "/fullhp": self.player.full_hp,
+            "/speedup": self.player.fire_speed_up,
+            "/speeddown": self.player.fire_speed_down
         }
 
         self.user_text = ""
@@ -73,8 +75,10 @@ class Console:
         description = [
             "</killall> - kills all enemies",
             "</fullhp> - fully restores your health",
+            "</speedup> - increases firing speed",
+            "</speeddown> - reduces firing speed"
         ]
-        self.info = pygame.Surface((400, len(description) * 23 + 5))
+        self.info = pygame.Surface((400, len(description) * 26 + 5))
         for i, line in enumerate(description, start=0):
             self.info.blit(self.font.render(line, (220, 220, 220)), (10, i * 30))
         self.info.set_colorkey((0, 0, 0))
@@ -86,7 +90,7 @@ class Console:
         self.back_space_delay = 3
         self.back_space_auto = 30
 
-        self.history = ["", "/killall", "/fullhp"]
+        self.history = ["", "/killall", "/fullhp", "/speedup", "/speeddown"]
         self.index = 0
 
         self.background_surf = pygame.Surface((self.info.get_width(), self.info.get_height() + 20))
@@ -365,6 +369,10 @@ class Game(Loop):
                     self.player.scroll_inventory(1)
                 if event.button == 5:
                     self.player.scroll_inventory(-1)
+            
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    self.player.stop_shoting()
 
             if not self.console.is_opened:
                 if event.type == pygame.KEYDOWN:
@@ -667,7 +675,7 @@ class MainMenu(Loop):
         self.current_map = "classic"
         
         self.choose_map_menu = ChooseMapMenu(None, 60, "data/font/letters.png", self.screen)
-        self.sound_menu = SoundsMenu(None, 60, "data/font/letters.png", self.screen)
+        self.sound_menu = SoundsMenu(None, 120, "data/font/letters.png", self.screen)
 
         self.clicked = False
 

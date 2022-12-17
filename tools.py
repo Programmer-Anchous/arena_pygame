@@ -177,7 +177,11 @@ class Slider(pygame.sprite.Sprite):
         if clicked and self.point_rect.collidepoint(mouse_pos):
             self.dragged = True
         if self.dragged:
-            if self.start < mouse_pos[0] < self.end:
+            if mouse_pos[0] <= self.start:
+                self.point_rect.centerx = self.start
+            elif mouse_pos[0] >= self.end:
+                self.point_rect.centerx = self.end
+            else:
                 self.point_rect.centerx = mouse_pos[0]
         
         self.display.blit(self.image, self.rect)

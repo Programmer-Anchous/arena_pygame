@@ -161,6 +161,10 @@ class Player(Entitiy):
         self.float_health = 100
         self.health = self.float_health
 
+        self.is_fire = False
+        self.fire_pause = 10
+        self.fire_counter = 0
+
         self.gravity = 1
         self.speed = 5
 
@@ -183,6 +187,16 @@ class Player(Entitiy):
         self.float_health += 0.005
         if self.float_health > 100:
             self.float_health = 100
+        
+        # pause for shoting
+        self.fire_counter -= 1
+        if self.fire_counter < 0:
+            self.fire_counter = 0
+        
+        if self.is_fire:
+            if self.fire_counter == 0:  # pause for shoting
+                    self.fire_counter = self.fire_pause
+                    self.fire(scroll, mx, my)
         
         self.health = int(self.float_health)
         self.move()
@@ -218,6 +232,17 @@ class Player(Entitiy):
 
         self.update_inventory()
         self.mouse_event(scroll, mx, my, clicked)
+
+    def fire_speed_up(self):
+        self.fire_pause -= 5
+        if self.fire_pause < 0:
+            self.fire_pause = 0
+    
+    def fire_speed_down(self):
+        self.fire_pause += 5
+
+    def stop_shoting(self):
+        self.is_fire = False
 
     def set_volume(self, num):
         self.bullet_sound.set_volume(num)
@@ -270,7 +295,7 @@ class Player(Entitiy):
                 else:
                     # if the mouse does not collide with any of the
                     # inventory slots, the player starts using his item
-                    self.fire(scroll, mx, my)
+                    self.is_fire = True
             else:
                 # if inventory is closed you can choose your object by clicking on it
                 for i in range(len(self.inventory.cells[:5])):
@@ -278,7 +303,7 @@ class Player(Entitiy):
                         self.inventory.current_item = i
                         break
                 else:
-                    self.fire(scroll, mx, my)
+                    self.is_fire = True
             
         if self.inventory.draged:
             icon = self.inventory.draged_item.icon
@@ -425,7 +450,7 @@ class Enemy_Sniper(Entitiy):
         self.gun = Gun(display)
 
         self.bullet_sound = pygame.mixer.Sound("data/sounds/bullet1.mp3")
-        self.bullet_sound.set_volume(0.05)
+        self.bullet_sound.set_volume(0.08)
 
     def update(self, scroll):
         self.distance = self.get_distance()
@@ -462,7 +487,7 @@ class Enemy_Sniper(Entitiy):
         self.draw_health(scroll)
 
     def set_volume(self, num):
-        self.bullet_sound.set_volume(num // 2)
+        self.bullet_sound.set_volume(num // 1.2)
 
     def update_item(self, scroll):
         if self.distance < 800:
