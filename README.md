@@ -3,7 +3,7 @@
 <p align="right">The project is under development.</p>
 
 ## Gameplay
-![image](/Preview/gameplay.jpg)
+![image](/Preview/gameplay1.jpg)
 
 <br>
 
