@@ -165,7 +165,7 @@ class Player(Entitiy):
         self.speed = 5
 
         self.bullet_sound = pygame.mixer.Sound("data/sounds/bullet1.mp3")
-        # self.bullet_sound.set_volume(1)
+        self.bullet_sound.set_volume(0.1)
 
         self.arrow_sound = pygame.mixer.Sound("data/sounds/arrow.mp3")
         self.arrow_sound.set_volume(0.2)
@@ -218,6 +218,10 @@ class Player(Entitiy):
 
         self.update_inventory()
         self.mouse_event(scroll, mx, my, clicked)
+
+    def set_volume(self, num):
+        self.bullet_sound.set_volume(num)
+        self.arrow_sound.set_volume(num + 0.1)
 
     def fire(self, scroll, mx, my):
         mx += scroll[0]
@@ -420,6 +424,9 @@ class Enemy_Sniper(Entitiy):
 
         self.gun = Gun(display)
 
+        self.bullet_sound = pygame.mixer.Sound("data/sounds/bullet1.mp3")
+        self.bullet_sound.set_volume(0.05)
+
     def update(self, scroll):
         self.distance = self.get_distance()
         if self.distance < 800:
@@ -453,6 +460,9 @@ class Enemy_Sniper(Entitiy):
         self.update_item(scroll)
 
         self.draw_health(scroll)
+
+    def set_volume(self, num):
+        self.bullet_sound.set_volume(num // 2)
 
     def update_item(self, scroll):
         if self.distance < 800:
@@ -559,6 +569,7 @@ class Enemy_Sniper(Entitiy):
         self.bullets.update(scroll, self.rects)
 
     def fire(self, rect):
+        self.bullet_sound.play()
         self.bullets.add_bullet((self.rect.x + 28, self.rect.y + 32), rect.center)
     
     def get_distance(self) -> int:
@@ -586,9 +597,9 @@ class Enemies:
             pygame.mixer.Sound("data/sounds/hurt4.mp3"),
         ]
         for sound in self.hurt_sounds:
-            sound.set_volume(0.5)
+            sound.set_volume(0.2)
         self.death_sound = pygame.mixer.Sound("data/sounds/death.mp3")
-        self.death_sound.set_volume(0.5)
+        self.death_sound.set_volume(0.1)
 
         self.sound_pause = 50
         self.sound_counter = 0
@@ -679,5 +690,12 @@ class Enemies:
             else:
                 i += 1
     
+    def set_volume(self, num):
+        for sound in self.hurt_sounds:
+            sound.set_volume(num + 0.1)
+        self.death_sound.set_volume(num)
+        for enemy in self.enemies:
+            enemy.set_volume(num)
+
     def add_enemy(self, coords, targetx, targety):
         self.enemies.append(Enemy_Sniper(self.display, coords, self.rects, self.platforms, targetx, targety, self.player))

@@ -28,7 +28,7 @@ s       sl                      rs       s
 spp      sl                    rs      pps
 s         sl                  rs         s
 s          sl                rs          s
-s           spppppppppppppppps           s  
+s           spppppppppppppppps           s
 s                                        s
 s                                        s
 s                                        s

@@ -141,6 +141,49 @@ class Button(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=coords)
 
 
+class Slider(pygame.sprite.Sprite):
+    def __init__(self, display, coords, size=(200, 20)):
+        offset = size[1] // 8
+        radius = size[1] // 2
+        self.display = display
+
+        self.image = pygame.Surface(size)
+        pygame.draw.rect(self.image, (230, 230, 230), (offset, offset, size[0] - offset * 2, size[1] - offset * 2), 2, radius)
+        self.image.set_colorkey((0, 0, 0))
+
+        self.rect = self.image.get_rect(center=coords)
+
+        self.point_image = pygame.Surface((size[1], size[1] * 1.5))
+        pygame.draw.rect(self.point_image, (230, 230, 230), (0, 0, *self.point_image.get_size()), 0, radius)
+        pygame.draw.rect(self.point_image, (200, 200, 200), (0, 0, *self.point_image.get_size()), 2, radius)
+        self.point_image.set_colorkey((0, 0, 0))
+
+        self.point_rect = self.point_image.get_rect(center=(coords[0] - size[0] // 2 + offset * 2, coords[1]))
+
+        self.start, self.end = self.point_rect.centerx, self.point_rect.centerx + size[0] - size[1] // 2
+        self.length = self.end - self.start
+        self.dragged = False
+    
+    def release(self):
+        self.dragged = False
+    
+    def set_value(self, num):
+        self.point_rect.x = self.start + self.length * num
+
+    def get_value(self) -> int:
+        return round((self.point_rect.x - self.start) / self.length * 100) / 100
+    
+    def update(self, clicked, mouse_pos):
+        if clicked and self.point_rect.collidepoint(mouse_pos):
+            self.dragged = True
+        if self.dragged:
+            if self.start < mouse_pos[0] < self.end:
+                self.point_rect.centerx = mouse_pos[0]
+        
+        self.display.blit(self.image, self.rect)
+        self.display.blit(self.point_image, self.point_rect)
+
+
 # trigonometry functions
 def to_deg(rad: float) -> float:
     return rad * (180 / math.pi)

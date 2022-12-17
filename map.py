@@ -113,20 +113,30 @@ class Map:
             data = list(map(list, data))
         
             mini_width = 4
-            minimap = pygame.Surface((max_width * mini_width + 10, len(data) * mini_width + 10))
+            offset = 10
+            minimap = pygame.Surface((max_width * mini_width + offset * 2, len(data) * mini_width + offset * 2))
+
+            alpha_surf = pygame.Surface(minimap.get_size())
+            pygame.draw.rect(alpha_surf, (20,) * 3, (0, 0, *alpha_surf.get_size()), 0, 7)
+            
+            alpha_surf.set_colorkey((0, 0, 0))
+            alpha_surf.set_alpha(200)
+
+            pygame.draw.rect(minimap, (30,) * 3, (0, 0, *minimap.get_size()), 2, 7)
 
             for i in range(len(data)):
                 for k in range(len(data[i])):
                     if data[i][k] == "p":
                         pygame.draw.rect(
                             minimap, (150, 100, 50),
-                            pygame.Rect(k * mini_width + 5, i * mini_width + 5, mini_width, mini_width)
+                            pygame.Rect(k * mini_width + offset, i * mini_width + offset, mini_width, mini_width)
                         )
                     elif data[i][k] in "rls":
                         pygame.draw.rect(
                             minimap, (100, 100, 100),
-                            pygame.Rect(k * mini_width + 5, i * mini_width + 5, mini_width, mini_width)
+                            pygame.Rect(k * mini_width + offset, i * mini_width + offset, mini_width, mini_width)
                         )
+            
             minimap.set_colorkey((0, 0, 0))
 
-            return minimap
+            return minimap, alpha_surf

@@ -13,6 +13,25 @@ images = [
     "data/images/bg5",
 ]
 
+music = [
+    "data/music/Fluffing-a-Duck.mp3",
+    "data/music/Monkeys-Spinning-Monkeys.mp3",
+    "data/music/Powerful-Trap-.mp3",
+    "data/music/Run-Amok.mp3"
+]
+
+
+class TextButton(Button):
+    def __init__(self, text, coords, display, sound, font_size=5):
+        self.font5 = Font("data/font/letters.png", font_size)
+        image = self.font5.render(text, (220, 220, 220))
+        pressed_image = self.font5.render(text, (255, 255, 0))
+
+        super().__init__(image, pressed_image, coords, display, sound)
+
+        self.width, self.height = self.size = image.get_size()
+        self.rect.center = coords
+
 
 def load_bg(size=None):
     image = load_image(images[random.randrange(len(images))])
@@ -20,7 +39,7 @@ def load_bg(size=None):
         image = pygame.transform.scale(image, size)
     color = image.get_at((10, 10))
     light_force = sum(color[:3]) // 3
-    light_force = min(255, light_force + 50)
+    light_force = min(255, light_force + 20)
 
     surf = pygame.Surface(image.get_size())
     surf.set_alpha(light_force)
@@ -201,26 +220,20 @@ class SettingsMenu(Loop):
         self.collide_button_sound = pygame.mixer.Sound("data/sounds/button1.mp3")
         self.collide_button_sound.set_volume(0.2)
 
-        self.to_main_menu_image = self.font4.render("to main menu", (220, 220, 220))
-        self.to_main_menu_pressed_image = self.font4.render(
-            "to main menu", (255, 255, 0)
-        )
-        self.to_main_menu_button = Button(
-            self.to_main_menu_image,
-            self.to_main_menu_pressed_image,
-            (self.WINDOW_SIZE[0] // 2 - self.to_main_menu_image.get_width() // 2, 400),
+        self.continue_button = TextButton(
+            "continue",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 - 50),
             self.display,
             self.collide_button_sound,
+            4
         )
 
-        self.continue_image = self.font4.render("continue", (220, 220, 220))
-        self.continue_pressed_image = self.font4.render("continue", (255, 255, 0))
-        self.continue_button = Button(
-            self.continue_image,
-            self.continue_pressed_image,
-            (self.WINDOW_SIZE[0] // 2 - self.continue_image.get_width() // 2, 500),
+        self.to_main_menu_button = TextButton(
+            "to main menu",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 + 50),
             self.display,
             self.collide_button_sound,
+            4
         )
 
         self.background = None
@@ -298,16 +311,12 @@ class Game(Loop):
             self.player,
         )
 
-        self.settings_menu_image = self.font3.render("settings", (220, 220, 220))
-        self.settings_menu_pressed_image = self.font3.render(
-            "settings", (255, 255, 0)
-        )
-        self.settings_menu_button = Button(
-            self.settings_menu_image,
-            self.settings_menu_pressed_image,
-            (self.WINDOW_SIZE[0] - 130, self.WINDOW_SIZE[1] - 40),
+        self.settings_menu_button = TextButton(
+            "settings",
+            (self.WINDOW_SIZE[0] - 80, self.WINDOW_SIZE[1] - 30),
             self.display,
             self.collide_button_sound,
+            3
         )
 
         self.generator = Generator(self.tile_map, self.player, self.enemies)
@@ -326,6 +335,9 @@ class Game(Loop):
         self.speed = 1 / self.FPS
 
         self.kill_count = 0
+
+        pygame.mixer.music.load("data/music/Powerful-Trap-.mp3")
+        pygame.mixer.music.play(-1)
     
     def update_score(self):
         self.score += self.speed
@@ -473,30 +485,34 @@ class ChooseMapMenu(Loop):
         self.collide_button_sound.set_volume(0.2)
 
         self.bg_image = load_bg(self.WINDOW_SIZE)
+        
+        self.back_button = TextButton(
+            "back",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 + 200), 
+            self.display,
+            self.collide_button_sound
+        )
 
-        self.back_image = self.font5.render("back", (220, 220, 220))
-        self.back_pressed_image = self.font5.render("back", (255, 255, 0))
-        self.back_button = Button(self.back_image, self.back_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 200),
-                            self.display, self.collide_button_sound)
-        
-        self.classic_image = self.font5.render("classic", (220, 220, 220))
-        self.classic_pressed_image = self.font5.render("classic", (255, 255, 0))
-        self.classic_button = Button(self.classic_image, self.classic_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.classic_image.get_width() // 2 - 200, self.WINDOW_SIZE[1] // 2 - 110),
-                            self.display, self.collide_button_sound)
-        
-        self.romb_image = self.font5.render("romb", (220, 220, 220))
-        self.romb_pressed_image = self.font5.render("romb", (255, 255, 0))
-        self.romb_button = Button(self.romb_image, self.romb_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.romb_image.get_width() // 2 - 200, self.WINDOW_SIZE[1] // 2 - 50),
-                            self.display, self.collide_button_sound)
-        
-        self.labyrinth_image = self.font5.render("labyrinth", (220, 220, 220))
-        self.labyrinth_pressed_image = self.font5.render("labyrinth", (255, 255, 0))
-        self.labyrinth_button = Button(self.labyrinth_image, self.labyrinth_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.labyrinth_image.get_width() // 2 - 200, self.WINDOW_SIZE[1] // 2 + 10),
-                            self.display, self.collide_button_sound)
+        self.classic_button = TextButton(
+            "classic",
+            (self.WINDOW_SIZE[0] // 2 - 200, self.WINDOW_SIZE[1] // 2 - 110), 
+            self.display,
+            self.collide_button_sound
+        )
+
+        self.romb_button = TextButton(
+            "romb",
+            (self.WINDOW_SIZE[0] // 2 - 200, self.WINDOW_SIZE[1] // 2 - 50), 
+            self.display,
+            self.collide_button_sound
+        )
+
+        self.labyrinth_button = TextButton(
+            "labyrinth",
+            (self.WINDOW_SIZE[0] // 2 - 200, self.WINDOW_SIZE[1] // 2 + 10), 
+            self.display,
+            self.collide_button_sound
+        )
         
         self.result_map = "classic"
         self.map_images = {
@@ -524,7 +540,6 @@ class ChooseMapMenu(Loop):
             if self.clicked:
                 sleep(0.1)
                 self.running = False
-                return self.result_map
         
         if self.classic_button.collided(mx, my):
             if self.clicked:
@@ -541,16 +556,71 @@ class ChooseMapMenu(Loop):
                 sleep(0.1)
                 self.result_map = "labyrinth"
         
-        minimap = self.map_images[self.result_map]
-        self.display.blit(minimap, (
+        minimap, alpha_surf = self.map_images[self.result_map]
+        coords = (
             self.WINDOW_SIZE[0] // 2 - minimap.get_width() // 2 + 100,
             self.WINDOW_SIZE[1] // 2 - minimap.get_height() // 2 - 40
-        ))
+        )
+        self.display.blit(alpha_surf, coords)
+        self.display.blit(minimap, coords)
         
         self.classic_button.update()
         self.romb_button.update()
         self.back_button.update()
         self.labyrinth_button.update()
+
+
+class SoundsMenu(Loop):
+    def user_init(self):
+        self.collide_button_sound = pygame.mixer.Sound("data/sounds/button1.mp3")
+        self.collide_button_sound.set_volume(0.2)
+
+        self.back_button = TextButton(
+            "back",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 + 200), 
+            self.display,
+            self.collide_button_sound
+        )
+
+        self.bg_image = load_bg(self.WINDOW_SIZE)
+        self.text_music = self.font4.render("music", (220, 220, 220))
+        self.text_effects = self.font4.render("effects", (220, 220, 220))
+        self.music_slider = Slider(self.display, (self.WINDOW_SIZE[0] // 2 + 90, self.WINDOW_SIZE[1] // 2 - 40), (300, 16))
+        self.effects_slider = Slider(self.display, (self.WINDOW_SIZE[0] // 2 + 90, self.WINDOW_SIZE[1] // 2 + 40), (300, 16))
+    
+    def user_events(self):
+        mx, my = pygame.mouse.get_pos()
+        self.clicked = False
+
+        self.display.blit(self.bg_image, (0, 0))
+
+        for event in self.get_events():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.clicked = True
+            
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    self.music_slider.release()
+                    self.effects_slider.release()
+        
+        if self.back_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.running = False
+        
+
+        self.display.blit(self.text_music, (self.music_slider.rect.x - 150, self.music_slider.rect.y - 5))
+        self.display.blit(self.text_effects, (self.effects_slider.rect.x - 150, self.effects_slider.rect.y - 5))
+        self.music_slider.update(self.clicked, (mx, my))
+        self.effects_slider.update(self.clicked, (mx, my))
+        pygame.mixer.music.set_volume(self.music_slider.get_value())
+
+        self.back_button.update()
 
 
 class MainMenu(Loop):
@@ -559,32 +629,35 @@ class MainMenu(Loop):
         self.collide_button_sound.set_volume(0.2)
 
         self.bg_image = load_bg(self.WINDOW_SIZE)
-        
 
         # creating buttons
-        self.exit_image = self.font5.render("exit", (220, 220, 220))
-        self.exit_pressed_image = self.font5.render("exit", (255, 255, 0))
-        self.exit_button = Button(self.exit_image, self.exit_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.exit_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 100),
-                            self.display, self.collide_button_sound)
+        self.play_button = TextButton(
+            "play",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 - 100),
+            self.display,
+            self.collide_button_sound
+        )
 
-        # self.back_image = self.font5.render("back", (220, 220, 220))
-        # self.back_pressed_image = self.font5.render("back", (255, 255, 0))
-        # self.back_button = Button(self.back_image, self.back_pressed_image,
-        #                     (self.WINDOW_SIZE[0] // 2 - self.back_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 160),
-        #                     self.display, self.collide_button_sound)
+        self.choose_map_button = TextButton(
+            "choose map",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2),
+            self.display,
+            self.collide_button_sound
+        )
 
-        self.play_image = self.font5.render("play", (220, 220, 220))
-        self.play_pressed_image = self.font5.render("play", (255, 255, 0))
-        self.play_button = Button(self.play_image, self.play_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.play_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 - 100),
-                            self.display, self.collide_button_sound)
-        
-        self.choose_map_image = self.font5.render("choose map", (220, 220, 220))
-        self.choose_map_pressed_image = self.font5.render("choose map", (255, 255, 0))
-        self.choose_map_button = Button(self.choose_map_image, self.choose_map_pressed_image,
-                            (self.WINDOW_SIZE[0] // 2 - self.choose_map_image.get_width() // 2, self.WINDOW_SIZE[1] // 2 + 0),
-                            self.display, self.collide_button_sound)
+        self.volume_button = TextButton(
+            "volume",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 + 100),
+            self.display,
+            self.collide_button_sound
+        )
+
+        self.exit_button = TextButton(
+            "exit",
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 + 200),
+            self.display,
+            self.collide_button_sound
+        )
         
         self.maps = {
             "classic": "data/maps/map.txt",
@@ -593,10 +666,19 @@ class MainMenu(Loop):
         }
         self.current_map = "classic"
         
-        # self.main_game = Game(None, 60, "data/font/letters.png", self.screen, "data/maps/map1.txt")
         self.choose_map_menu = ChooseMapMenu(None, 60, "data/font/letters.png", self.screen)
+        self.sound_menu = SoundsMenu(None, 60, "data/font/letters.png", self.screen)
 
         self.clicked = False
+
+        self.music_volume = 0.1
+        self.effects_volume = 0.1
+        self.sound_menu.music_slider.set_value(self.music_volume)
+        self.sound_menu.effects_slider.set_value(self.effects_volume)
+
+        pygame.mixer.music.load("data/music/easy_bg.mp3")
+        pygame.mixer.music.set_volume(self.music_volume)
+        pygame.mixer.music.play(-1)
     
     def user_events(self):
         mx, my = pygame.mouse.get_pos()
@@ -621,20 +703,34 @@ class MainMenu(Loop):
         if self.play_button.collided(mx, my):
             if self.clicked:
                 sleep(0.1)
-                # self.main_game.run()
-
                 # always start new game
-                Game(None, 60, "data/font/letters.png", self.screen, self.maps[self.current_map]).run()
+                game = Game(None, 60, "data/font/letters.png", self.screen, self.maps[self.current_map])
+                game.enemies.set_volume(self.effects_volume)
+                game.player.set_volume(self.effects_volume)
+                game.run()
+
+                pygame.mixer.music.load("data/music/easy_bg.mp3")
+                pygame.mixer.music.set_volume(self.music_volume)
+                pygame.mixer.music.play(-1)
         
         if self.choose_map_button.collided(mx, my):
             if self.clicked:
                 sleep(0.1)
                 self.choose_map_menu.run()
                 self.current_map = self.choose_map_menu.result_map
+        
+        if self.volume_button.collided(mx, my):
+            if self.clicked:
+                sleep(0.1)
+                self.sound_menu.run()
+                self.music_volume = self.sound_menu.music_slider.get_value()
+                self.effects_volume = self.sound_menu.effects_slider.get_value()
+                pygame.mixer.music.set_volume(self.music_volume)
 
         self.play_button.update()
-        self.exit_button.update()
         self.choose_map_button.update()
+        self.volume_button.update()
+        self.exit_button.update()
 
 
 if __name__ == "__main__":
