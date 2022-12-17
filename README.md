@@ -21,4 +21,4 @@
 <br>
 
 P.S. <br>
-I am not the author of some images and sounds in game, I downloaded them from the internet.
+I am not the author of some images, sounds and music in game, I downloaded them from the internet.
