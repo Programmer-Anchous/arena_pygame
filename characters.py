@@ -195,8 +195,11 @@ class Player(Entitiy):
         
         if self.is_fire:
             if self.fire_counter == 0:  # pause for shoting
+                if isinstance(self.item, Bow):
+                    self.fire_counter = self.fire_pause + 20
+                else:
                     self.fire_counter = self.fire_pause
-                    self.fire(scroll, mx, my)
+                self.fire(scroll, mx, my)
         
         self.health = int(self.float_health)
         self.move()
@@ -624,7 +627,7 @@ class Enemies:
         for sound in self.hurt_sounds:
             sound.set_volume(0.2)
         self.death_sound = pygame.mixer.Sound("data/sounds/death.mp3")
-        self.death_sound.set_volume(0.1)
+        self.death_sound.set_volume(0.05)
 
         self.sound_pause = 50
         self.sound_counter = 0
@@ -653,7 +656,7 @@ class Enemies:
                     del bullets.bullets[k]
                     if self.enemies[i].health <= 0:
                         self.enemy_killed = True
-                        if chance(0.2):
+                        if chance(0.1):
                             self.sound_counter = self.sound_pause
                             self.death_sound.play()
                         
@@ -677,7 +680,7 @@ class Enemies:
                     del arrows.arrows[k]
                     if self.enemies[i].health <= 0:
                         self.enemy_killed = True
-                        if chance(0.2):
+                        if chance(0.1):
                             self.sound_counter = self.sound_pause
                             self.death_sound.play()
                         
@@ -718,7 +721,7 @@ class Enemies:
     def set_volume(self, num):
         for sound in self.hurt_sounds:
             sound.set_volume(num + 0.1)
-        self.death_sound.set_volume(num)
+        self.death_sound.set_volume(max(0, num - 0.5))
         for enemy in self.enemies:
             enemy.set_volume(num)
 

@@ -1,7 +1,7 @@
 from tools import *
 from weapon import *
 from characters import *
-from map import *
+from tile_map import *
 
 
 pygame.mixer.pre_init(44100, -16, 2, 512)

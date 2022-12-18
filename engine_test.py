@@ -2,7 +2,7 @@ from engine import *
 
 from weapon import *
 from characters import *
-from map import *
+from tile_map import *
 
 
 images = [
@@ -19,18 +19,6 @@ music = [
     "data/music/Powerful-Trap-.mp3",
     "data/music/Run-Amok.mp3"
 ]
-
-
-class TextButton(Button):
-    def __init__(self, text, coords, display, sound, font_size=5):
-        self.font5 = Font("data/font/letters.png", font_size)
-        image = self.font5.render(text, (220, 220, 220))
-        pressed_image = self.font5.render(text, (255, 255, 0))
-
-        super().__init__(image, pressed_image, coords, display, sound)
-
-        self.width, self.height = self.size = image.get_size()
-        self.rect.center = coords
 
 
 def load_bg(size=None):
@@ -226,7 +214,7 @@ class SettingsMenu(Loop):
 
         self.continue_button = TextButton(
             "continue",
-            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 - 50),
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 - 100),
             self.display,
             self.collide_button_sound,
             4
@@ -234,11 +222,19 @@ class SettingsMenu(Loop):
 
         self.to_main_menu_button = TextButton(
             "to main menu",
-            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2 + 50),
+            (self.WINDOW_SIZE[0] // 2, self.WINDOW_SIZE[1] // 2),
             self.display,
             self.collide_button_sound,
             4
         )
+
+        self.text_music = self.font4.render("music", (220, 220, 220))
+        self.text_effects = self.font4.render("effects", (220, 220, 220))
+        self.music_slider = Slider(self.display, (self.WINDOW_SIZE[0] // 2 + 90, self.WINDOW_SIZE[1] // 2 + 150), (300, 16))
+        self.effects_slider = Slider(self.display, (self.WINDOW_SIZE[0] // 2 + 90, self.WINDOW_SIZE[1] // 2 + 220), (300, 16))
+
+        self.effects_volume = 0
+        self.music_volume = 0
 
         self.background = None
         self.clicked = False
@@ -268,6 +264,11 @@ class SettingsMenu(Loop):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.clicked = True
+            
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    self.music_slider.release()
+                    self.effects_slider.release()
         
         if self.to_main_menu_button.collided(mx, my):
             if self.clicked:
@@ -279,6 +280,22 @@ class SettingsMenu(Loop):
             if self.clicked:
                 sleep(0.1)
                 self.running = False
+    
+        self.display.blit(self.text_music, (self.music_slider.rect.x - 150, self.music_slider.rect.y - 5))
+        self.display.blit(self.text_effects, (self.effects_slider.rect.x - 150, self.effects_slider.rect.y - 5))
+        self.music_slider.update(self.clicked, (mx, my))
+        self.effects_slider.update(self.clicked, (mx, my))
+        pygame.mixer.music.set_volume(self.music_slider.get_value())
+    
+    def run(self):
+        self.music_slider.set_value(pygame.mixer.music.get_volume())
+        self.music_slider.set_value(self.music_volume)
+        self.effects_slider.set_value(self.effects_volume)
+        super().run()
+    
+    def set_volume(self, num1, num2):
+        self.music_volume = num1
+        self.effects_volume = num2
     
     def set_background(self, background: pygame.Surface) -> None:
         self.background = background
@@ -342,6 +359,17 @@ class Game(Loop):
 
         pygame.mixer.music.load("data/music/Powerful-Trap-.mp3")
         pygame.mixer.music.play(-1)
+
+        self.effects_volume = 0
+        self.music_volume = 0
+    
+    def set_sliders_volume(self, num1, num2):
+        self.settings_menu.effects_volume = num2
+        self.settings_menu.music_volume = num1
+        self.effects_volume = num2
+        self.music_volume = num1
+        self.settings_menu.effects_slider.set_value(num2)
+        self.settings_menu.music_slider.set_value(num1)
     
     def update_score(self):
         self.score += self.speed
@@ -403,7 +431,14 @@ class Game(Loop):
                 if self.clicked:
                     sleep(0.1)
                     self.settings_menu.set_background(self.previous_display)
+                    
                     self.settings_menu.run()
+                    vol1 = self.settings_menu.music_slider.get_value()
+                    vol2 = self.settings_menu.effects_slider.get_value()
+                    self.enemies.set_volume(vol2)
+                    self.player.set_volume(vol2)
+                    self.settings_menu.set_volume(vol1, vol2)
+
                     if self.settings_menu.get_status():
                         self.running = False
                     self.clicked = False
@@ -595,6 +630,8 @@ class SoundsMenu(Loop):
         self.text_effects = self.font4.render("effects", (220, 220, 220))
         self.music_slider = Slider(self.display, (self.WINDOW_SIZE[0] // 2 + 90, self.WINDOW_SIZE[1] // 2 - 40), (300, 16))
         self.effects_slider = Slider(self.display, (self.WINDOW_SIZE[0] // 2 + 90, self.WINDOW_SIZE[1] // 2 + 40), (300, 16))
+        self.music_slider.set_value(0.5)
+        self.effects_slider.set_value(0.5)
     
     def user_events(self):
         mx, my = pygame.mouse.get_pos()
@@ -620,7 +657,6 @@ class SoundsMenu(Loop):
             if self.clicked:
                 sleep(0.1)
                 self.running = False
-        
 
         self.display.blit(self.text_music, (self.music_slider.rect.x - 150, self.music_slider.rect.y - 5))
         self.display.blit(self.text_effects, (self.effects_slider.rect.x - 150, self.effects_slider.rect.y - 5))
@@ -629,6 +665,9 @@ class SoundsMenu(Loop):
         pygame.mixer.music.set_volume(self.music_slider.get_value())
 
         self.back_button.update()
+
+    def run(self):
+        super().run()
 
 
 class MainMenu(Loop):
@@ -679,8 +718,8 @@ class MainMenu(Loop):
 
         self.clicked = False
 
-        self.music_volume = 0.1
-        self.effects_volume = 0.1
+        self.music_volume = 0.5
+        self.effects_volume = 0.5
         self.sound_menu.music_slider.set_value(self.music_volume)
         self.sound_menu.effects_slider.set_value(self.effects_volume)
 
@@ -715,7 +754,13 @@ class MainMenu(Loop):
                 game = Game(None, 60, "data/font/letters.png", self.screen, self.maps[self.current_map])
                 game.enemies.set_volume(self.effects_volume)
                 game.player.set_volume(self.effects_volume)
+
+                game.set_sliders_volume(self.music_volume, self.effects_volume)
                 game.run()
+                self.music_volume = game.settings_menu.music_volume
+                self.effects_volume = game.settings_menu.effects_volume
+                self.sound_menu.music_slider.set_value(self.music_volume)
+                self.sound_menu.effects_slider.set_value(self.effects_volume)
 
                 pygame.mixer.music.load("data/music/easy_bg.mp3")
                 pygame.mixer.music.set_volume(self.music_volume)
