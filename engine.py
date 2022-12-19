@@ -9,7 +9,7 @@ class Loop:
 
         if not screen:
             if WINDOW_SIZE:
-                self.WINDOW_SIZE = WINDOW_SIZE
+                self.WINDOW_SIZE = self.WIDTH, self.HEIGHT = WINDOW_SIZE
                 if not initialized:
                     self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
             else:
@@ -19,7 +19,7 @@ class Loop:
                     self.screen = pygame.display.set_mode(self.WINDOW_SIZE, pygame.FULLSCREEN)
         else:
             self.screen = screen
-            self.WINDOW_SIZE = self.screen.get_size()
+            self.WINDOW_SIZE = self.WIDTH, self.HEIGHT = self.screen.get_size()
         
         self.FPS = FPS
         
@@ -30,6 +30,7 @@ class Loop:
         self.running = True
 
         if font_path:
+            self.font_path = font_path
             self.font2 = Font(font_path, 2)
             self.font3 = Font(font_path, 3)
             self.font4 = Font(font_path, 4)

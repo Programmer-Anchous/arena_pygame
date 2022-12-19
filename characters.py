@@ -158,7 +158,7 @@ class Player(Entitiy):
         self.real_moving_down = False  # for platforms
         self.moving_down_limit = 5
 
-        self.float_health = 100
+        self.float_health = 1
         self.health = self.float_health
 
         self.is_fire = False

@@ -207,6 +207,83 @@ class Generator:
                 self.spawn_time_limit = self.spawn_time_max
 
 
+class GameOverMenu(Loop):
+    def user_init(self):
+        self.font8 = Font(self.font_path, 10)
+        self.game_over_surf = pygame.Surface(self.WINDOW_SIZE)
+        text = self.font8.render("game over", (250, 250, 250))
+        self.game_over_surf.blit(
+            text,
+            (
+                self.WIDTH // 2 - text.get_width() // 2,
+                self.HEIGHT // 2 - text.get_height() // 2
+            )
+        )
+
+        self.backgound_surface = None
+        
+        self.alpha_level = 0
+        self.game_over_surf.set_alpha(0)
+
+        self.counter = 0
+        self.end_limit = 400
+        self.end_music_limit = self.end_limit - 100
+
+        self.result_time = 0
+        self.result_kills = 0
+
+        self.volume_origin = pygame.mixer.music.get_volume()
+        self.volume = pygame.mixer.music.get_volume()
+        self.volume_speed = self.volume_origin / 100
+    
+    def user_events(self):
+        for event in self.get_events():
+            if event.type == pygame.QUIT:
+                self.running = False
+                pygame.quit()
+                sys.exit()
+        
+        if self.counter > self.end_limit:
+            self.running = False
+            pygame.mixer.music.set_volume(self.volume_origin)
+
+        self.counter += 1
+        self.alpha_level = min(255, self.alpha_level + 1)
+
+        if self.counter > self.end_music_limit:
+            pygame.mixer.music.set_volume(self.volume)
+            self.volume -= self.volume_speed
+
+        self.game_over_surf.set_alpha(self.alpha_level)
+        self.display.blit(self.backgound_surface, (0, 0))
+        self.display.blit(self.game_over_surf, (0, 0))
+    
+    def read_records(self):
+        with open("data/SAV/records.txt", "r", encoding="UTF-8") as file1:
+            parse = lambda x: tuple(map(int, x.split()))
+            records_list = list(map(parse, file1.read().strip().split("\n")))
+            return records_list
+    
+    def write_record(self, time, kills):
+        with open("data/SAV/records.txt", "r", encoding="UTF-8") as file1:
+            parse = lambda x: tuple(map(int, x.split()))
+            records_list = list(map(parse, file1.read().strip().split("\n")))
+        
+        with open("data/SAV/records.txt", "w", encoding="UTF-8") as file2:
+            records_list.append((time, kills))
+            records_list.sort(key=lambda t: t[1], reverse=True)
+            del records_list[10:]
+            result_str = "\n".join(list(map(lambda t: "{} {}".format(*t), records_list)))
+            file2.write(result_str)
+    
+    def set_result(self, time, kills):
+        self.result_time = time
+        self.result_kills = kills
+    
+    def set_backgounrd(self, surf):
+        self.backgound_surface = surf
+
+
 class SettingsMenu(Loop):
     def user_init(self):
         self.collide_button_sound = pygame.mixer.Sound("data/sounds/button1.mp3")
@@ -352,6 +429,8 @@ class Game(Loop):
         self.settings_menu = SettingsMenu(None, 60, "data/font/letters.png", self.screen)
         self.previous_display = self.display.copy()
 
+        self.game_over_menu = GameOverMenu(None, 60, "data/font/letters.png", self.screen)
+
         self.score = 0
         self.speed = 1 / self.FPS
 
@@ -464,6 +543,9 @@ class Game(Loop):
 
         if self.player.health <= 0:
             self.running = False
+            self.game_over_menu.set_result(self.score, self.kill_count)
+            self.game_over_menu.set_backgounrd(self.display)
+            self.game_over_menu.run()
 
     def draw_minimap(self):
         minimap = self.tile_map.get_minimap().copy()
