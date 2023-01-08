@@ -184,7 +184,7 @@ class Slider(pygame.sprite.Sprite):
         self.point_rect.x = self.start + self.length * (num)
 
     def get_value(self) -> int:
-        return round((self.point_rect.x - self.start) / self.length * 100) / 100
+        return round((self.point_rect.centerx - self.start) / self.length * 100) / 100
     
     def update(self, clicked, mouse_pos):
         if clicked and self.rect.collidepoint(mouse_pos):

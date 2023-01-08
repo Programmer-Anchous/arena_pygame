@@ -158,7 +158,7 @@ class Player(Entitiy):
         self.real_moving_down = False  # for platforms
         self.moving_down_limit = 5
 
-        self.float_health = 1
+        self.float_health = 100
         self.health = self.float_health
 
         self.is_fire = False
@@ -368,7 +368,7 @@ class Player(Entitiy):
         self.float_health = 100
     
     def draw_healthbar(self):
-        text = f"life  {self.health} / {100}"
+        text = f"life  {self.health if self.health > 0 else 0} / {100}"
         surf = self.font.render(text, (220, 220, 220))
         self.display.blit(surf, (self.WINDOW_SIZE[0] - 230, 10))
 
